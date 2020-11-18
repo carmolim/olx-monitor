@@ -2,20 +2,20 @@
 
 Estava procurando um produto específico no OLX, e diariamente acessava minhas buscas salvas no aplicativo à procura de uma boa oportunidade. Um dia encontrei uma ótima portunidade, mas quando entrei em contato com o vendedor já era tarde, ele já estava indo ao encontro do comprador e já tinham outros 3 na espera.
 
-Vi nessa situação uma oportunidade para aprender um pouco sobre scrapping no `nodejs` e tentar não perder uma próxima oportunidade. Espero que você também consiga o mesmo.
+Vi nessa situação uma oportunidade para aprender um pouco sobre scrapping usando o `nodejs` e tentar não perder uma próxima oportunidade. Espero que você também consiga o mesmo.
 
 ## Instalação e configuração
-Para utilizar esse script você precisa ter o `node` e o `npm` devidamente instalados, ter uma conta no Telegram, e idealmente um computador ou servidor que fique ligado para executar o scrip com um `cronjob`. Eu usei um Raspberry Pi 2 que consome pouca energia e já uso para outros fins. 
+Para utilizar esse script você precisa ter o `node` e o `npm` devidamente instalados, ter uma conta no Telegram, e idealmente um computador ou servidor que fique ligado 27/7 para executar o script com um `cronjob`. Eu usei um Raspberry Pi 2 que consome pouca energia e já uso para outros fins. 
 
-Se você já está familizado com a API do Telegram e já mexeu bom bots segue um passo-a-passo mais enxuto:
+Se você já está familiarizado com a API do Telegram e já mexeu bom bots segue um passo-a-passo mais enxuto:
 
-1. Clonar ou fazer download do repositório `git clone firefly-iii/firefly-iii`
+1. Clonar ou fazer download do repositório `git clone https://github.com/carmolim/olx-monitor.git`
 * Instalar as dependências `npm install`
 * Renomear o arquivo example.env para .env e incluir as informações do seu BOT e do seu grupo
 * Incluir as URLs que você quer que sejam monitoradas no arquivo `config.js` 
 * Executar o script usando o comando `node index.js`
-* Acompanhar o andamtendo do script no Terminal
-* Se correu tudo certo dois novos arquivos foram criados o `ads.db` que é o banco de dados e o `scrapper.log` com os logs de execução do programa
+* Acompanhar o andamento do script no Terminal
+* Se correu tudo certo, dois novos arquivos foram criados o `ads.db` que é o banco de dados e o `scrapper.log` com os logs de execução do programa
 * Agora é só configurar um `cronjob` para executar na frequência desejada e esperar as notificações
 
 
@@ -34,7 +34,7 @@ Para conseguir o seu token você precisa criar o seu próprio bot. Eu pretendo f
 #### Descobrindo seu CHAT ID
 Depois de criar o seu bot, crie um grupo e convite o seu bot que você acabou de criar e també um outro bot, o `@idbot`, ele vai te ajudar a descobrir o `CHAT_ID` que precisamos para enviar a notificação. 
 
-Depois de incluir o no grupo, basta digitar `/getgroupid@myidbot` e e bot vai te responde o ID do chat. 
+Depois de incluir o no grupo, basta digitar `/getgroupid@myidbot` e bot irá responder com o ID do chat. 
 
 #### Editando seu ambiênte
 Dentro do repositório tem um arquivo chamado `example.env`, você precisa renomea-lo para apenas `.env` e preencher as informações que você acabou de pegar. 
@@ -47,7 +47,7 @@ TELEGRAM_CHAT\_ID  | ID do seu chat
 ### O que deve ser monitorado?
 Eu não sei o que você está procurando no OLX, mas você precisa dizer para o script. A forma mais fácil de fazer isso é entrar no site do OLX, fazer uma busca, colocar os filtros que você acha necessário e copiar o endereço que o OLX vai criar.
 
-Você pode utilizar uma ou mais pesquisas, basta apenas incluir as `URLs` no arquivo `config.js` dentro da variável `urls`
+Você pode utilizar uma ou mais pesquisas, basta apenas incluir as `URLs` no arquivo `config.js` dentro da variável `URLs`
 
 #### Exemplos
 
@@ -86,7 +86,7 @@ Depois disso você pode executar o seguinte comando: `crontab -e` que irá abrir
 
 O terminal irá abrir o arquivo e para incluir ou colar um texto você deverá precionar a tecla `i` para ativar o modo de inserção de conteúdo.
 
-`*/(intervalo em minutos) * * * * cd <path da pasta seu > && <path do node> index.js`
+`*/(intervalo em minutos) * * * * cd <path da pasta seu repositório> && <path do node> index.js`
 
 A minha configuração ficou assim:
 
@@ -98,7 +98,7 @@ Depois que incluir a sua configuração você deverá precionar a tecla `ESC` e 
 
 ## Funcionamento 
 
-O funcionamamento do script é simples. Ele percorre um `array` de`URLs` copiadas do OLX, que já contém os filtros de preço mínimo, máximo e etc, encontra os anúncios dentro dessa página e inclui os anúncios encontrados em um banco de dados SQLite e também envia uma notificação para um BOT no Telegram. 
+O funcionamamento do script é simples. Ele percorre um `array` de `URLs` copiadas do OLX, que já contém os filtros de preço mínimo, máximo e etc, encontra os anúncios dentro dessa página e inclui os anúncios encontrados em um banco de dados SQLite e também envia uma notificação para um BOT no Telegram. 
 
 As entradas salvas no banco de dados são utilizadas posteriormente para detectar alterações nos preços, que também são notificadas através do Telegram.
 
