@@ -146,9 +146,11 @@ async function processEntry( entry ){
 
 }
 
+
 async function adAlreadyAdded( entry ){
 	return await db.get(`SELECT id FROM ads WHERE id = ?`, entry.id );
 }
+
 
 async function addEntry( entry ){
 	
@@ -176,6 +178,7 @@ async function addEntry( entry ){
 
 }
 
+
 async function sendNotification( msg ) {
 
 	msg = encodeURI(msg)
@@ -187,6 +190,7 @@ async function sendNotification( msg ) {
 		console.error(error)
 	}
 }
+
 
 async function compareExistingEntry( entry ){
 
@@ -205,6 +209,7 @@ async function compareExistingEntry( entry ){
 		}
 	}
 }
+
 
 async function updateEntry( entry ){
 
