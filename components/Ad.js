@@ -8,12 +8,13 @@ const notifier = require( './Notifier' )
 
 class Ad{
     
-    constructor( ad ){
+    constructor( ad, firstTimeRunning ){
         this.id      = ad.id
         this.url     = ad.url
         this.title   = ad.title
         this.price   = ad.price
         this.created = ad.created
+        this.firstTimeRunning = firstTimeRunning
         this.db;
 
         this.process()
@@ -59,18 +60,43 @@ class Ad{
     addToDataBase = async () => {
 
         // log.info('Saving new ad: ' + this.url );
-    
+
+        try {
+
+            // because in the first run all the ads are new
+           if( !this.firstTimeRunning ){
+
+                const msg = 'New ad found!\n' + this.title + ' - R$' + this.price + '\n\n' + this.url;
+                await notifier.sendNotification( msg )
+                
+            }
+            
+        } catch (error) {
+            
+            // log.error('Could not insert new entry');
+            throw Error( error );
+            
+        }
+         
         try {
     
-            const insertString = `INSERT INTO ads( id, url, title, price, created, lastUpdate ) VALUES( ?, ?, ?, ?, ?, ? )`;
-            await this.db.run(insertString, this.id, this.url, this.title, this.price, this.created, new Date().getTime() );
-    
+            const insertString = `INSERT INTO ads( id, url, title, price, created, lastUpdate )
+                                  VALUES( ?, ?, ?, ?, ?, ? )`;
+
+            await this.db.run( insertString,
+                               this.id,
+                               this.url,
+                               this.title,
+                               this.price, 
+                               this.created,
+                               new Date().getTime()
+            );
         }
     
         catch ( error )  {
     
             // log.error('Could not insert new entry');
-            throw Error(error);
+            throw Error( error );
     
         }
     }
@@ -80,12 +106,12 @@ class Ad{
         try {
 
             const sql = `UPDATE ads SET price = ?, lastUpdate = ?  WHERE id = ?`;
-            return await this.db.run( sql, this.price, this.id, new Date().getTime() );
-    
+            return await this.db.run( sql, this.price, new Date().getTime(), this.id );
+         
         } catch ( error ) {
             
             // log.error('Erro ao atualizar um anúncio no banco de dados' );
-            throw Error(  error );
+            throw Error( error );
         }
     }
 
@@ -102,11 +128,10 @@ class Ad{
 
                 // log.info('This ad had a price reduction: ' + this.url );
 
-                const msg =
-                `Price drop found!
-                From R$${savedEntry.price} to R$ ${this.price}
-                ${this.title}
-                ${this.url}`
+                const decreasePercentage =  Math.abs( Math.round( ( ( this.price - savedEntry.price ) / savedEntry.price ) * 100 ) )
+
+                const msg = 'Price drop found! '+ decreasePercentage +'% OFF!\n' + 
+                'From R$' + savedEntry.price + ' to R$' + this.price + '\n\n' + this.url
 
                 return await notifier.sendNotification( msg )
     

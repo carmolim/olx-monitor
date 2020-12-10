@@ -107,7 +107,7 @@ async function scrapper( url ){
                 }
                 
 				try {
-                    const ad = await new Ad( result )
+                    const ad = await new Ad( result, firstTimeRunning )
 
 			    } catch ( error ) {
 
