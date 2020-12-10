@@ -1,3 +1,5 @@
+<img alt="OlX Monitor" src="assets/olx-monitor-banner.png"></img>
+
 # OLX Monitor
 
 Estava procurando um produto específico no OLX, e diariamente acessava minhas buscas salvas no aplicativo à procura de uma boa oportunidade. Um dia encontrei uma ótima portunidade, mas quando entrei em contato com o vendedor já era tarde, ele já estava indo ao encontro do comprador e já tinham outros 3 na espera.
