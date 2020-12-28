@@ -1,4 +1,4 @@
-<img alt="OlX Monitor" src="assets/olx-monitor-banner.png"></img>
+<img alt="OLX Monitor" src="assets/olx-monitor-banner.png"></img>
 
 # OLX Monitor
 
