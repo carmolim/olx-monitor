@@ -14,6 +14,7 @@ class Ad{
         this.title   = ad.title
         this.price   = ad.price
         this.created = ad.created
+        this.searchTerm = ad.searchTerm.charAt(0).toUpperCase() + ad.searchTerm.slice(1)
         this.firstTimeRunning = firstTimeRunning
         this.db;
 
@@ -66,7 +67,7 @@ class Ad{
             // because in the first run all the ads are new
            if( !this.firstTimeRunning ){
 
-                const msg = 'New ad found!\n' + this.title + ' - R$' + this.price + '\n\n' + this.url;
+                const msg = 'New '+ this.searchTerm + ' ad found!\n' + this.title + ' - R$' + this.price + '\n\n' + this.url;
                 await notifier.sendNotification( msg )
                 
             }
@@ -80,8 +81,8 @@ class Ad{
          
         try {
     
-            const insertString = `INSERT INTO ads( id, url, title, price, created, lastUpdate )
-                                  VALUES( ?, ?, ?, ?, ?, ? )`;
+            const insertString = `INSERT INTO ads( id, url, title, price, created, lastUpdate, searchTerm )
+                                  VALUES( ?, ?, ?, ?, ?, ?, ? )`;
 
             await this.db.run( insertString,
                                this.id,
@@ -89,7 +90,8 @@ class Ad{
                                this.title,
                                this.price, 
                                this.created,
-                               new Date().getTime()
+                               new Date().getTime(),
+                               this.searchTerm
             );
         }
     
@@ -130,7 +132,7 @@ class Ad{
 
                 const decreasePercentage =  Math.abs( Math.round( ( ( this.price - savedEntry.price ) / savedEntry.price ) * 100 ) )
 
-                const msg = 'Price drop found! '+ decreasePercentage +'% OFF!\n' + 
+                const msg = 'Price drop found! ' + decreasePercentage +'% OFF!\n' + 
                 'From R$' + savedEntry.price + ' to R$' + this.price + '\n\n' + this.url
 
                 return await notifier.sendNotification( msg )

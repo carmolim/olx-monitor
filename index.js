@@ -4,6 +4,7 @@ const cheerio = require('cheerio')
 const Database = require('sqlite-async')
 const fs = require('fs')
 const path = require('path')
+const url = require('url')
 
 const Ad = require('./components/Ad.js')
 
@@ -66,21 +67,24 @@ const main = async() =>{
 main()
 
 
-async function scrapper( url ){
+async function scrapper( address ){
 
 	maxPrice = 0
 	minPrice = 99999999
 
 	try{
 
-		const response = await axios( url )
+		const response = await axios( address )
 
 		const html = response.data;
 	    const $ = cheerio.load(html)
 	    const $ads = $('#ad-list li')
 
-		log.info( 'Cheking for new ads at: ' + url );
-		log.info( $ads.length + ' ads found' );
+		log.info( 'Cheking for new ads at: ' + address );
+        log.info( $ads.length + ' ads found' );
+        
+        let searchTerm = url.parse( address, true )
+        searchTerm = searchTerm.query.q
 
 	    for( let i=0; i< $ads.length; i++ )
 	    {
@@ -99,15 +103,16 @@ async function scrapper( url ){
 	    	if( url ){
 
 	    		const result = {
-	    			id,
+                    id,
 		    		url,
 		    		title,
 		    		price,
-		    		created
+		    		created,
+                    searchTerm
                 }
                 
 				try {
-                    const ad = await new Ad( result, firstTimeRunning )
+                    const ad = new Ad( result, firstTimeRunning )
 
 			    } catch ( error ) {
 
@@ -115,11 +120,10 @@ async function scrapper( url ){
 			        throw Error( error );
 			    }
 	    	}
-
 	    }
 
 	} catch( error ){
-		log.error( 'Could not fetch the url' + url );
+		log.error( 'Could not fetch the url ' + url );
 		throw Error( error );
 	}
 }
@@ -144,6 +148,7 @@ async function createdb() {
 	        CREATE TABLE "ads" (
 				"id"	        INTEGER NOT NULL UNIQUE,
 				"title"	        TEXT NOT NULL,
+				"searchTerm"    TEXT NOT NULL,
 				"price"	        INTEGER NOT NULL,
 				"url"	        TEXT NOT NULL,
 				"created"	    INTEGER NOT NULL,
