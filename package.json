@@ -1,0 +1,25 @@
+{
+  "name": "olx-monitor",
+  "version": "1.0.0",
+  "description": "Programa que monitora novos anúncios feitos no OLX, alteração de preços em anúncios existentes e envia notificações pelo Telegram.",
+  "main": "index.js",
+  "dependencies": {
+    "axios": "^0.21.0",
+    "cheerio": "^1.0.0-rc.3",
+    "dotenv": "^8.2.0",
+    "simple-node-logger": "^18.12.24",
+    "sqlite-async": "^1.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "olx",
+    "scrapper",
+    "monitor"
+  ],
+  "author": "Augusto Carmo",
+  "license": "ISC"
+  
+}
