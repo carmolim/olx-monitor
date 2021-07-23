@@ -2,24 +2,24 @@
 
 # OLX Monitor
 
-Estava procurando um produto específico no OLX, e diariamente acessava minhas buscas salvas no aplicativo à procura de uma boa oportunidade. Um dia encontrei uma ótima portunidade, mas quando entrei em contato com o vendedor já era tarde, ele já estava indo ao encontro do comprador e já tinham outros 3 na espera.
+Estava procurando um produto específico no OLX, e diariamente acessava minhas buscas salvas no aplicativo à procura de uma boa oportunidade. Um dia encontrei uma ótima oportunidade, mas quando entrei em contato com o vendedor já era tarde, ele já estava indo ao encontro do comprador e caso a a venda não desse certo tinham mais 3 pessoas na espera para comprar.
 
-Vi nessa situação uma oportunidade para aprender um pouco sobre scrapping usando o `nodejs` e tentar não perder uma próxima oportunidade. Espero que você também consiga o mesmo.
+Vi nessa situação uma oportunidade para aprender um pouco sobre scrapping usando o `nodejs` para tentar não perder uma próxima oportunidade. Espero que você também consiga o mesmo.
 
 ## Instalação e configuração
 
-Para utilizar esse script você precisa ter o `node` e o `npm` devidamente instalados, ter uma conta no Telegram, e idealmente um computador ou servidor que fique ligado 27/7 para executar o script com um `cronjob`. Eu usei um Raspberry Pi 2 que consome pouca energia e já uso para outros fins. 
+Para utilizar esse script você precisa ter o `node` e o `npm` devidamente instalados, ter uma conta no [Telegram](https://telegram.org/), e idealmente um computador que fique ligado 27/7 para executar o script com um `cronjob`. Eu usei um Raspberry Pi 2 que consome pouca energia e já uso para outros fins. 
 
 Se você já está familiarizado com a API do Telegram e já mexeu bom bots segue um passo-a-passo mais enxuto:
 
 1. Clonar ou fazer download do repositório `git clone https://github.com/carmolim/olx-monitor.git`
-2. Instalar as dependências `npm install`
-3. Renomear o arquivo `example.env` para `.env` e incluir as informações do seu BOT e do seu grupo
+2. Instalar as dependências com o comando `npm install`
+3. Renomear o arquivo `example.env` para `.env` e incluir as informações do seu BOT e do seu grupo que irá receber as notificações
 4. Incluir as URLs que você quer que sejam monitoradas no arquivo `config.js`
 5. Executar o script usando o comando `node index.js`
 6. Acompanhar o andamento do script no Terminal
-7. Se correu tudo certo, dois novos arquivos foram criados o `ads.db` que é o banco de dados e o `scrapper.log` com os logs de execução do programa
-8. Agora é só configurar um `cronjob` para executar na frequência desejada e esperar as notificações
+7. Se correu tudo certo, dois novos arquivos foram criados o `ads.db` que é o banco de dados e o `scrapper.log` com os logs de execução do script
+8. Agora é só configurar um `cronjob` para executar na frequência desejada e esperar as notificações (mais informações abaixo)
 
 ### Configuração do Telegram
 
@@ -83,14 +83,14 @@ Você poderá acompanhar o funcionamento do script pelo terminal e se tudo funci
 
 Agora que está com tudo funcionando, você precisa configurar um `cronjob` que irá executar script no intervalo de tempo que você desejar.
 
-A configuração do `cronjob` vai variar de acordo com a plataforma que você está utilizando, mas basicamente você precisa de algumas infomações
+A configuração do `cronjob` vai variar de acordo com a plataforma que você está utilizando, mas basicamente você precisa de algumas informações
 
-* O `path` do sctrip `index.js` pasta que onde você baixou o repositório. Se você estiver com o Terminal aberto na pasta, no Linux e no macOS você pode usar o comando `pwd` e ele irá retornar o `path` da pasta.
-* Path absoluto de onde está instalado no `node`. No Linux e no macOS você pode executar esse comando `which node` e ele vai retornar o `path` absoluto de onde está o executável.
+* O `path` absoluto do script `index.js` que fica na pasta que onde você baixou o repositório. Se você estiver com o Terminal aberto na pasta, no Linux e no macOS você pode usar o comando `pwd` e ele irá retornar o `path` da pasta.
+* `path` absoluto de onde está instalado o `node`. No Linux e no macOS você pode executar esse comando `which node` e ele vai retornar o `path` absoluto de onde está o executável.
 
 Depois disso você pode executar o seguinte comando: `crontab -e` que irá abrir um editor onde você pode incluir uma nova linha seguindo essa estrutura.
 
-O terminal irá abrir o arquivo e para incluir ou colar um texto você deverá precionar a tecla `i` para ativar o modo de inserção de conteúdo.
+O Terminal irá abrir o arquivo e para incluir ou colar um texto você deverá presionar a tecla `i` para ativar o modo de inserção de conteúdo.
 
 `*/(intervalo em minutos) * * * * cd <path da pasta seu repositório> && <path do node> index.js`
 
@@ -107,3 +107,9 @@ O funcionamamento do script é simples. Ele percorre um `array` de `URLs` copiad
 As entradas salvas no banco de dados são utilizadas posteriormente para detectar alterações nos preços, que também são notificadas através do Telegram.
 
 Para rodar o script estou usando um `cronjob` que executa o script a cada 10 minutos.
+
+## Considerações
+
+- Esse script só funciona com a versão brasileira do OLX, nos outros países a interface é diferente e o scrapper não consegue puxar as informações necessárias para funcionar.
+
+- No momento o script só puxa busca as informações presentes na primeira página de resultados. Num futuro penso em fazer uma alteração no `scrapper`para percorrer todas as páginas de resultado.
