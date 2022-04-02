@@ -9,11 +9,11 @@ const notifier = require( './Notifier' )
 class Ad{
     
     constructor( ad, firstTimeRunning ){
-        this.id      = ad.id
-        this.url     = ad.url
-        this.title   = ad.title
-        this.price   = ad.price
-        this.created = ad.created
+        this.id               = ad.id
+        this.url              = ad.url
+        this.title            = ad.title
+        this.price            = ad.price
+        this.created          = ad.created
         this.firstTimeRunning = firstTimeRunning
         this.db;
 
@@ -64,7 +64,7 @@ class Ad{
         try {
 
             // because in the first run all the ads are new
-           if( !this.firstTimeRunning ){
+        if( !this.firstTimeRunning ){
 
                 const msg = 'New ad found!\n' + this.title + ' - R$' + this.price + '\n\n' + this.url;
                 await notifier.sendNotification( msg )
@@ -77,19 +77,19 @@ class Ad{
             throw Error( error );
             
         }
-         
+        
         try {
     
             const insertString = `INSERT INTO ads( id, url, title, price, created, lastUpdate )
-                                  VALUES( ?, ?, ?, ?, ?, ? )`;
+                                VALUES( ?, ?, ?, ?, ?, ? )`;
 
             await this.db.run( insertString,
-                               this.id,
-                               this.url,
-                               this.title,
-                               this.price, 
-                               this.created,
-                               new Date().getTime()
+                            this.id,
+                            this.url,
+                            this.title,
+                            this.price, 
+                            this.created,
+                            new Date().getTime()
             );
         }
     
@@ -107,7 +107,7 @@ class Ad{
 
             const sql = `UPDATE ads SET price = ?, lastUpdate = ?  WHERE id = ?`;
             return await this.db.run( sql, this.price, new Date().getTime(), this.id );
-         
+        
         } catch ( error ) {
             
             // log.error('Erro ao atualizar um anúncio no banco de dados' );

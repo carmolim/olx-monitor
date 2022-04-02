@@ -11,7 +11,7 @@ let firstTimeRunning = true
 
 // checks for a log file was already created indicating that the program already ran
 if ( fs.existsSync( path.join( __dirname, config.logPath ) ) ) {
-	firstTimeRunning = false
+    firstTimeRunning = false
 }
 
 // create a stdout and file logger
@@ -19,47 +19,47 @@ const log = require('simple-node-logger').createSimpleLogger( path.join( __dirna
 
 // check if the SQLite was already created
 if ( !fs.existsSync( path.join( __dirname, config.dbPath ) ) ) {
-	
-	log.info( 'No database found' );
+    
+    log.info( 'No database found' );
 
-	// creates the database with the needed schema
-	createdb()
+    // creates the database with the needed schema
+    createdb()
 }
 else{
-	log.info( 'Database found' );
+    log.info( 'Database found' );
 }
 
 let minPrice, maxPrice;
 
 const main = async() =>{
 
-	log.info('Program started');
+    log.info('Program started');
 
-	try {
+    try {
 
         db = await Database.open( path.join( __dirname, config.dbPath ) );
         
-	} catch (error) {
+    } catch (error) {
 
-		log.error( error );
+        log.error( error );
         throw Error('can not access sqlite database');
         
-	}
- 
-	for( let i=0; i<config.urls.length; i++ ){
+    }
 
-		try {
+    for( let i=0; i<config.urls.length; i++ ){
 
-			await scrapper ( config.urls[i] )
+        try {
 
-		} catch (error) {
+            await scrapper ( config.urls[i] )
 
-	    	throw Error('can not access sqlite database');
+        } catch (error) {
 
-		}
-	}
+            throw Error('can not access sqlite database');
 
-	log.info('Program ended');
+        }
+    }
+
+    log.info('Program ended');
 
 }
 
@@ -68,88 +68,88 @@ main()
 
 async function scrapper( url ){
 
-	maxPrice = 0
-	minPrice = 99999999
+    maxPrice = 0
+    minPrice = 99999999
 
-	try{
+    try{
 
-		const response = await axios( url )
+        const response = await axios( url )
 
-		const html = response.data;
-	    const $ = cheerio.load(html)
-	    const $ads = $('#ad-list li')
+        const html = response.data;
+        const $ = cheerio.load(html)
+        const $ads = $('#ad-list li')
 
-		log.info( 'Cheking for new ads at: ' + url );
-		log.info( $ads.length + ' ads found' );
+        log.info( 'Cheking for new ads at: ' + url );
+        log.info( $ads.length + ' ads found' );
 
-	    for( let i=0; i< $ads.length; i++ )
-	    {
+        for( let i=0; i< $ads.length; i++ )
+        {
 
-	    	const element = $ads[i]
+            const element = $ads[i]
 
-	    	const id      = $(element).children('a').attr('data-lurker_list_id');
-	    	const url     = $(element).children('a').attr('href');
-	    	const title   = $(element).find('h2').first().text().trim();
-	    	const price   = parseInt( $(element).find('p').first().text().replace('R$ ', '').replace('.', '') );
-	    	const created = new Date().getTime();
+            const id      = $(element).children('a').attr('data-lurker_list_id');
+            const url     = $(element).children('a').attr('href');
+            const title   = $(element).find('h2').first().text().trim();
+            const price   = parseInt( $(element).find('p').first().text().replace('R$ ', '').replace('.', '') );
+            const created = new Date().getTime();
 
-	    	// some elements found in the ads selection don't have an url
-	    	// I supposed that OLX adds other content between the ads,
-	    	// let's clean those empty ads
-	    	if( url ){
+            // some elements found in the ads selection don't have an url
+            // I supposed that OLX adds other content between the ads,
+            // let's clean those empty ads
+            if( url ){
 
-	    		const result = {
-	    			id,
-		    		url,
-		    		title,
-		    		price,
-		    		created
+                const result = {
+                    id,
+                    url,
+                    title,
+                    price,
+                    created
                 }
                 
-				try {
+                try {
                     const ad = await new Ad( result, firstTimeRunning )
 
-			    } catch ( error ) {
+                } catch ( error ) {
 
-					log.error( 'Could not process this entry' );
-			        throw Error( error );
-			    }
-	    	}
+                    log.error( 'Could not process this entry' );
+                    throw Error( error );
+                }
+            }
 
-	    }
+        }
 
-	} catch( error ){
-		log.error( 'Could not fetch the url' + url );
-		throw Error( error );
-	}
+    } catch( error ){
+        log.error( 'Could not fetch the url' + url );
+        throw Error( error );
+    }
 }
 
 async function createdb() {
 
-	log.info( 'Creating a new database' );
+    log.info( 'Creating a new database' );
 
-	try {
+    try {
 
         db = await Database.open( path.join( __dirname, config.dbPath ) );
         
-	} catch ( error ) {
+    } catch ( error ) {
 
         log.error( 'Can not access sqlite database' );
-	    throw Error( error );
-	}
+        throw Error( error );
+    }
 
-	try {
-		
+    try {
+        
         await db.run(`
-	        CREATE TABLE "ads" (
-				"id"	        INTEGER NOT NULL UNIQUE,
-				"title"	        TEXT NOT NULL,
-				"price"	        INTEGER NOT NULL,
-				"url"	        TEXT NOT NULL,
-				"created"	    INTEGER NOT NULL,
-				"lastUpdate"	INTEGER NOT NULL
-			)`
-		);    
+            CREATE TABLE "ads" (
+                "id"            INTEGER NOT NULL UNIQUE,
+                "title"	        TEXT NOT NULL,
+                "price"         INTEGER NOT NULL,
+                "url"           TEXT NOT NULL,
+                "created"       INTEGER NOT NULL,
+                "lastUpdate"    INTEGER NOT NULL
+            )`
+        );    
 
     } catch ( error ) {
 
