@@ -64,7 +64,7 @@ class Ad{
         try {
 
             // because in the first run all the ads are new
-        if( !this.firstTimeRunning ){
+            if( !this.firstTimeRunning ){
 
                 const msg = 'New ad found!\n' + this.title + ' - R$' + this.price + '\n\n' + this.url;
                 await notifier.sendNotification( msg )
@@ -81,15 +81,15 @@ class Ad{
         try {
     
             const insertString = `INSERT INTO ads( id, url, title, price, created, lastUpdate )
-                                VALUES( ?, ?, ?, ?, ?, ? )`;
+                                  VALUES( ?, ?, ?, ?, ?, ? )`;
 
             await this.db.run( insertString,
-                            this.id,
-                            this.url,
-                            this.title,
-                            this.price, 
-                            this.created,
-                            new Date().getTime()
+                this.id,
+                this.url,
+                this.title,
+                this.price, 
+                this.created,
+                new Date().getTime()
             );
         }
     
