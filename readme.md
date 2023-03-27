@@ -8,18 +8,18 @@ Vi nessa situação uma oportunidade para aprender um pouco sobre scrapping usan
 
 ## Instalação e configuração
 
-Para utilizar esse script você precisa ter o `node` e o `npm` devidamente instalados, ter uma conta no [Telegram](https://telegram.org/), e idealmente um computador que fique ligado 27/7 para executar o script com um `cronjob`. Eu usei um Raspberry Pi 2 que consome pouca energia e já uso para outros fins. 
+Para utilizar esse script você precisa ter o `node` e o `npm` devidamente instalados, ter uma conta no [Telegram](https://telegram.org/), e idealmente um computador que fique ligado 27/7 para executar o script continuamente. Eu usei um Raspberry Pi 2 que consome pouca energia e já uso para outros fins, mas você pode usar um VPS, ou um sevidor gratuito da Oracle.
 
 Se você já está familiarizado com a API do Telegram e já mexeu bom bots segue um passo-a-passo mais enxuto:
 
 1. Clonar ou fazer download do repositório `git clone https://github.com/carmolim/olx-monitor.git`
-2. Instalar as dependências com o comando `npm install`
-3. Renomear o arquivo `example.env` para `.env` e incluir as informações do seu BOT e do seu grupo que irá receber as notificações
-4. Incluir as URLs que você quer que sejam monitoradas no arquivo `config.js`
-5. Executar o script usando o comando `node index.js`
-6. Acompanhar o andamento do script no Terminal
-7. Se correu tudo certo, dois novos arquivos foram criados o `ads.db` que é o banco de dados e o `scrapper.log` com os logs de execução do script
-8. Agora é só configurar um `cronjob` para executar na frequência desejada e esperar as notificações (mais informações abaixo)
+1. Instalar as dependências com o comando `npm install`
+1. Renomear o arquivo `example.env` para `.env` e incluir as informações do seu BOT e do seu grupo que irá receber as notificações
+1. Incluir as URLs que você quer que sejam monitoradas no arquivo `config.js`
+1. Definir qual o intervalo que você quer que as buscas sejam feitas no arquivo `config.js`
+1. Executar o script usando o comando `node index.js`
+1. Acompanhar o andamento do script no Terminal
+1. Se correu tudo certo, dois novos arquivos foram criados o `ads.db` que é o banco de dados e o `scrapper.log` com os logs de execução do script
 
 ### Configuração do Telegram
 
@@ -47,6 +47,8 @@ Dentro do repositório tem um arquivo chamado `example.env`, você precisa renom
 ### O que deve ser monitorado?
 
 Eu não sei o que você está procurando no OLX, mas você precisa dizer para o script. A forma mais fácil de fazer isso é entrar no site do OLX, fazer uma busca, colocar os filtros que você acha necessário e copiar o endereço que o OLX vai criar.
+
+Recomendo utilizar filtros bem específicos para não gerar resultados com muitos itens. Como esse script irá varrer todos os resultados encontrados, pode ser possível que não seja possível passar por todos os resultados dentro do intervalo definido, isso pode fazer com que o Olx perceba uma quantidade alta de chamadas do seu IP e faça algum bloqueio. Isso nunca me aconteceu, mas pode acontecer.
 
 Você pode utilizar uma ou mais pesquisas, basta apenas incluir as `URLs` no arquivo `config.js` dentro da variável `URLs`
 
@@ -79,37 +81,13 @@ Agora você já está com tudo configurado, e se você seguiu todos os passos co
 
 Você poderá acompanhar o funcionamento do script pelo terminal e se tudo funcionar você irá reparar que dois novos arquivos apareceram dentro da sua pasta, o arquivo `ads.db` que é o banco de dados e o `scrapper.log` onde você pode acompanhar o registro do que aconteceu em cada execução do script. 
 
-### Rodando automaticamente
-
-Agora que está com tudo funcionando, você precisa configurar um `cronjob` que irá executar script no intervalo de tempo que você desejar.
-
-A configuração do `cronjob` vai variar de acordo com a plataforma que você está utilizando, mas basicamente você precisa de algumas informações
-
-* O `path` absoluto do script `index.js` que fica na pasta que onde você baixou o repositório. Se você estiver com o Terminal aberto na pasta, no Linux e no macOS você pode usar o comando `pwd` e ele irá retornar o `path` da pasta.
-* `path` absoluto de onde está instalado o `node`. No Linux e no macOS você pode executar esse comando `which node` e ele vai retornar o `path` absoluto de onde está o executável.
-
-Depois disso você pode executar o seguinte comando: `crontab -e` que irá abrir um editor onde você pode incluir uma nova linha seguindo essa estrutura.
-
-O Terminal irá abrir o arquivo e para incluir ou colar um texto você deverá presionar a tecla `i` para ativar o modo de inserção de conteúdo.
-
-`*/(intervalo em minutos) * * * * cd <path da pasta seu repositório> && <path do node> index.js`
-
-A minha configuração ficou assim:
-
-`*/5 * * * * cd /root/olx/ && /usr/local/bin/node index.js`
-
-Depois que incluir a sua configuração você deverá precionar a tecla `ESC` e depois `:wq` e enter, esse comando irá salvar e fechar o editor de arquivos, e assim que você fizer isso o serviço `cron` irá reiniciar com a nova instrução. Você poderá verificar se o cron está fucionando corretamente analisando o conteúdo dos logs gerados no arquivo `scrapper.js`.
-
 ## Funcionamento
 
 O funcionamamento do script é simples. Ele percorre um `array` de `URLs` copiadas do OLX, que já contém os filtros de preço mínimo, máximo e etc, encontra os anúncios dentro dessa página e inclui os anúncios encontrados em um banco de dados SQLite e também envia uma notificação para um BOT no Telegram. 
 
 As entradas salvas no banco de dados são utilizadas posteriormente para detectar alterações nos preços, que também são notificadas através do Telegram.
 
-Para rodar o script estou usando um `cronjob` que executa o script a cada 10 minutos.
 
 ## Considerações
 
-- Esse script só funciona com a versão brasileira do OLX, nos outros países a interface é diferente e o scrapper não consegue puxar as informações necessárias para funcionar.
-
-- No momento o script só puxa busca as informações presentes na primeira página de resultados. Num futuro penso em fazer uma alteração no `scrapper`para percorrer todas as páginas de resultado.
+- Esse script só funciona com a versão brasileira do OLX, nos outros países a interface é diferente e o scrapper não consegue puxar as informações necessárias para funcionar. Porém a adaptação para outros países deve ser consideravalmente fácil de fazer. As alterações deverão ser feitas no arquivo `Scraper.js`

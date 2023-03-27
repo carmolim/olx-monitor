@@ -7,19 +7,24 @@
     "axios": "^0.21.0",
     "cheerio": "^1.0.0-rc.3",
     "dotenv": "^8.2.0",
+    "node-cron": "^3.0.2",
     "simple-node-logger": "^18.12.24",
-    "sqlite-async": "^1.1.0"
+    "sqlite3": "^5.1.6"
   },
-  "devDependencies": {},
   "scripts": {
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "olx",
     "scrapper",
-    "monitor"
+    "monitor",
+    "alert",
+    "telegram"
   ],
   "author": "Augusto Carmo",
-  "license": "ISC"
-  
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^2.0.21"
+  }
 }
