@@ -1,8 +1,9 @@
 .env
 async.js
 price.js
-ads.db
 refs-todo.todo
 scrapper.log
 raw-index.js
 config.js
+*.db
+*.sqlite
