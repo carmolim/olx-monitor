@@ -12,19 +12,18 @@ let maxPrice = 0
 let minPrice = 99999999
 let sumPrices = 0
 let validAds = 0
+let adsFound = 0
 let nextPage = 0
 
 const scraper = async (url) => {
-
-    console.log('scraper');
 
     page = 1
     maxPrice = 0
     minPrice = 99999999
     sumPrices = 0
+    adsFound = 0
     validAds = 0
     nextPage = 0
-
 
     let searchTerm = new URL(url)
     searchTerm = searchTerm.searchParams.get('q')
@@ -33,32 +32,33 @@ const scraper = async (url) => {
 
     do {
         url = setUrlParam(url, 'o', page)
-        console.log(url);
 
-        const response  = await axios( url )
-        const html      = response.data;
-        const $         = cheerio.load(html)
-        nextPage        = $('[data-lurker-detail="next_page"]').length
+        try {
 
-        scrapePage(url, searchTerm, notify)
+            const response  = await axios( url )
+            const html      = response.data;
+            const $         = cheerio.load(html)
+            nextPage        = $('[data-lurker-detail="next_page"]').length
+            await scrapePage($, searchTerm, notify)
+
+        } catch (error) {
+            log.error( error );
+        }
 
         page++
 
     } while (nextPage);
 }
 
-const scrapePage = async (url, searchTerm, notify) => {
+const scrapePage = async ($, searchTerm, notify) => {
 
     try{
 
-        const response  = await axios( url )
-        const html      = response.data;
-        const $         = cheerio.load(html)
-        const $ads      = $('ul#ad-list li')
-        const nextPage  = $('[data-lurker-detail="next_page"]')
+        const $ads = $('ul#ad-list li')
+        adsFound += $ads.length
 
         log.info( `Checking new ads for: ${searchTerm}` )
-        log.info( 'Ads found: ' + $ads.length )
+        log.info( 'Ads found: ' + adsFound )
 
         for( let i = 0; i < $ads.length; i++ ){
 
@@ -79,19 +79,14 @@ const scrapePage = async (url, searchTerm, notify) => {
                 notify
             }
             
-            try {
-                const ad = new Ad( result )
-                await ad.process()
+            const ad = new Ad( result )
+            await ad.process()
 
-                if(ad.valid){
-                    validAds++
-                    minPrice = checkMinPrice(ad.price, minPrice)
-                    maxPrice = checkMaxPrice(ad.price, maxPrice)
-                    sumPrices += ad.price
-                }
-
-            } catch ( error ) {
-                log.error( error )
+            if(ad.valid){
+                validAds++
+                minPrice = checkMinPrice(ad.price, minPrice)
+                maxPrice = checkMaxPrice(ad.price, maxPrice)
+                sumPrices += ad.price
             }
         }
         
@@ -101,8 +96,8 @@ const scrapePage = async (url, searchTerm, notify) => {
         log.info( 'Average price: ' + sumPrices / validAds)
 
     } catch( error ){
-        log.error( error );
         log.error( 'Could not fetch the url ' + url )
+        log.error( error );
     }
 
 }
