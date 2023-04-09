@@ -20,8 +20,8 @@ const runScraper = () => {
 const main = async() =>{
     log.info('Program started')
     await createTables()
-    runScraper()
 }
+
 main()
 
 cron.schedule(config.interval, () => {
