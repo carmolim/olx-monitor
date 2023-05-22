@@ -28,7 +28,7 @@ const scraper = async (url) => {
     let searchTerm = new URL(url)
     searchTerm = searchTerm.searchParams.get('q')
 
-    const notify = !termAlreadySearched(searchTerm, 1)
+    const notify = termAlreadySearched(searchTerm, 1)
 
     do {
         url = setUrlParam(url, 'o', page)
