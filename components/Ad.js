@@ -63,7 +63,7 @@ class Ad{
                 try {
                     const msg = 'New ad found!\n' + this.title + ' - R$' + this.price + '\n\n' + this.url
                     log.info('Ad ' + this.id + ' added to the database')
-                    notifier.sendNotification( msg )
+                    await notifier.sendNotification( msg )
                 } catch (error) {
                     log.error('Could not send a notification')
                 }
@@ -101,7 +101,7 @@ class Ad{
                 const msg = 'Price drop found! '+ decreasePercentage +'% OFF!\n' + 
                 'From R$' + this.saved.price + ' to R$' + this.price + '\n\n' + this.url
 
-                notifier.sendNotification( msg )
+                await notifier.sendNotification( msg )
             }
         }
     }

@@ -13,9 +13,9 @@ exports.sendNotification = async ( msg ) => {
         try {
             return await axios.get('https://api.telegram.org/bot' + config.telegramToken + '/sendMessage?chat_id=' + config.telegramChatID + '&text=' + msg ) 
         } catch (err) {
-            const timeout = Math.pow(2, i)
+            const timeout = 33 * i
             console.log('Waiting', timeout, 'ms')
-            await wait(timeout)
+            await wait(timeout) 
             console.log('Retrying', err.message, i)
         }
     }
@@ -25,6 +25,6 @@ function wait (timeout) {
     return new Promise((resolve) => {
         setTimeout(() => {
         resolve()
-        }, timeout);
+    }, timeout);
     })
 }
