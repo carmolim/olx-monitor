@@ -91,11 +91,12 @@ const scrapePage = async ($, searchTerm, notify) => {
         }
         
         log.info( 'Valid ads: ' + validAds )
-        log.info( 'Maximum price: ' + maxPrice)
-        log.info( 'Minimum price: ' + minPrice)
-        log.info( minPrice, validAds )
-        log.info( 'Average price: ' + sumPrices / validAds)
 
+        if (validAds) {
+            log.info( 'Maximum price: ' + maxPrice)
+            log.info( 'Minimum price: ' + minPrice)
+            log.info( 'Average price: ' + sumPrices / validAds)
+        }
     } catch( error ) {
         log.error( error );
         throw new Error('Scraping failed');
