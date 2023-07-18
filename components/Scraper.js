@@ -42,7 +42,7 @@ const scraper = async (url) => {
             await scrapePage($, searchTerm, notify)
 
         } catch (error) {
-            log.error( error );
+            log.error( 'Could not fetch the url ' + url)
         }
 
         page++
@@ -52,23 +52,23 @@ const scraper = async (url) => {
 
 const scrapePage = async ($, searchTerm, notify) => {
 
-    try{
-
-        const $ads = $('ul#ad-list li')
-        adsFound += $ads.length
+    try {
+        const script = $('script[id="initial-data"]').first().attr('data-json')
+        const adList = JSON.parse(script).listingProps.adList
+        adsFound += adList.length
 
         log.info( `Checking new ads for: ${searchTerm}` )
         log.info( 'Ads found: ' + adsFound )
 
-        for( let i = 0; i < $ads.length; i++ ){
+        for( let i = 0; i < adList.length; i++ ){
 
             log.debug( 'Checking ad: ' + (i+1))
         
-            const element   = $ads[i]
-            const title     = $(element).find('h2').first().text().trim()
-            const id        = $(element).find('a').first().attr('data-lurker_list_id')
-            const url       = $(element).find('a').first().attr('href')
-            const price     = parseInt( $(element).find('span[aria-label^="Preço"]').first().text().replace('R$ ', '').replace('.', '') || '0' )
+            const advert    = adList[i]
+            const title     = advert.subject
+            const id        = advert.listId
+            const url       = advert.url
+            const price     = parseInt( advert.price?.replace('R$ ', '')?.replace('.', '') || '0' )
 
             const result = {
                 id,
@@ -91,13 +91,15 @@ const scrapePage = async ($, searchTerm, notify) => {
         }
         
         log.info( 'Valid ads: ' + validAds )
-        log.info( 'Maximum price: ' + maxPrice)
-        log.info( 'Minimum price: ' + minPrice)
-        log.info( 'Average price: ' + sumPrices / validAds)
 
-    } catch( error ){
-        log.error( 'Could not fetch the url ' + url )
+        if (validAds) {
+            log.info( 'Maximum price: ' + maxPrice)
+            log.info( 'Minimum price: ' + minPrice)
+            log.info( 'Average price: ' + sumPrices / validAds)
+        }
+    } catch( error ) {
         log.error( error );
+        throw new Error('Scraping failed');
     }
 
 }
