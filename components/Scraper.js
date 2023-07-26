@@ -26,7 +26,7 @@ const scraper = async (url) => {
     nextPage = 0
 
     let searchTerm = new URL(url)
-    searchTerm = searchTerm.searchParams.get('q')
+    searchTerm = searchTerm.searchParams.get('q') || ''
 
     const notify = termAlreadySearched(searchTerm, 1)
 
@@ -63,7 +63,7 @@ const scrapePage = async ($, searchTerm, notify) => {
         for( let i = 0; i < adList.length; i++ ){
 
             log.debug( 'Checking ad: ' + (i+1))
-        
+
             const advert    = adList[i]
             const title     = advert.subject
             const id        = advert.listId
@@ -78,7 +78,7 @@ const scrapePage = async ($, searchTerm, notify) => {
                 price,
                 notify
             }
-            
+
             const ad = new Ad( result )
             await ad.process()
 
@@ -89,7 +89,7 @@ const scrapePage = async ($, searchTerm, notify) => {
                 sumPrices += ad.price
             }
         }
-        
+
         log.info( 'Valid ads: ' + validAds )
 
         if (validAds) {
