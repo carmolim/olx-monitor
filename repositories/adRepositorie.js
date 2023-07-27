@@ -53,12 +53,37 @@ const getAdsBySearchTerm = async (term, limit) => {
 }
 
 
+const getAdsBySearchId = async (id, limit) => {
+    log.debug( 'adRepositorie: getAd' )
+
+    const query = `SELECT * FROM ads WHERE searchId = ? LIMIT ?`
+    const values = [id, limit]
+
+    return new Promise(function(resolve, reject){
+        db.all(query, values, function(error, rows){
+
+            if(error){
+                reject(error)
+                return
+            }
+
+            if(!rows){
+                reject('No ad with this id was found')
+                return
+            }
+
+            resolve(rows)
+        })
+    })
+}
+
+
 const createAd = async (ad) => {
     log.debug( 'adRepositorie: createAd' )
 
     const query = `
-        INSERT INTO ads( id, url, title, searchTerm, price, created, lastUpdate )
-        VALUES( ?, ?, ?, ?, ?, ?, ? )
+        INSERT INTO ads( id, url, title, searchTerm, searchId, price, created, lastUpdate )
+        VALUES( ?, ?, ?, ?, ?, ?, ?, ? )
     `
 
     const now = new Date().getTime()
@@ -68,6 +93,7 @@ const createAd = async (ad) => {
         ad.url,
         ad.title,
         ad.searchTerm,
+        ad.searchId,
         ad.price, 
         now,
         now
@@ -108,6 +134,7 @@ const updateAd = async (ad) => {
 module.exports = {
     getAd,
     getAdsBySearchTerm,
+    getAdsBySearchId,
     createAd,
     updateAd
 }

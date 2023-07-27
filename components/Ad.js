@@ -13,6 +13,7 @@ class Ad{
         this.url              = ad.url
         this.title            = ad.title
         this.searchTerm       = ad.searchTerm
+        this.searchId         = ad.searchId
         this.price            = ad.price
         this.valid            = false
         this.saved            = null,
@@ -105,7 +106,6 @@ class Ad{
             }
         }
     }
-
 
     // some elements found in the ads selection don't have an url
     // I supposed that OLX adds other content between the ads,
