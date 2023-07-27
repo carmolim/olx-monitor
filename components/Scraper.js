@@ -25,12 +25,13 @@ const scraper = async (url) => {
     validAds = 0
     nextPage = 0
 
-    let searchTerm = new URL(url)
-    searchTerm = searchTerm.searchParams.get('q')
-
-    const notify = termAlreadySearched(searchTerm, 1)
+    const parsedUrl = new URL(url)
+    const searchTerm = parsedUrl.searchParams.get('q') || ''
+    const searchId = hashCode(url);
+    const notify = await termAlreadySearched(searchId)
 
     do {
+
         url = setUrlParam(url, 'o', page)
 
         try {
@@ -39,7 +40,8 @@ const scraper = async (url) => {
             const html      = response.data;
             const $         = cheerio.load(html)
             nextPage        = $('[data-lurker-detail="next_page"]').length
-            await scrapePage($, searchTerm, notify)
+
+            await scrapePage($, searchTerm, searchId, notify)
 
         } catch (error) {
             log.error( 'Could not fetch the url ' + url)
@@ -50,7 +52,7 @@ const scraper = async (url) => {
     } while (nextPage);
 }
 
-const scrapePage = async ($, searchTerm, notify) => {
+const scrapePage = async ($, searchTerm, searchId, notify) => {
 
     try {
         const script = $('script[id="initial-data"]').first().attr('data-json')
@@ -75,12 +77,13 @@ const scrapePage = async ($, searchTerm, notify) => {
                 url,
                 title,
                 searchTerm,
+                searchId,
                 price,
                 notify
             }
             
             const ad = new Ad( result )
-            await ad.process()
+            ad.process()
 
             if(ad.valid){
                 validAds++
@@ -104,9 +107,9 @@ const scrapePage = async ($, searchTerm, notify) => {
 
 }
 
-const termAlreadySearched = async (term, limit) => {
+const termAlreadySearched = async (id) => {
     try {
-        await adRepository.getAdsBySearchTerm(term, limit)
+        await adRepository.getAdsBySearchId(id, 1)
         return true
     } catch (error) {
         log.error( error )
@@ -131,6 +134,14 @@ const checkMaxPrice = (price, maxPrice) => {
     if(price > maxPrice) return price
     else return maxPrice
 }
+
+const hashCode = function(s) {
+    var h = 0, l = s.length, i = 0;
+    if ( l > 0 )
+      while (i < l)
+        h = (h << 5) - h + s.charCodeAt(i++) | 0;
+    return h;
+};
 
 module.exports = {
     scraper

@@ -10,6 +10,7 @@ const createTables = async () => {
     const query = `
         CREATE TABLE IF NOT EXISTS "ads" (
             "id"            INTEGER NOT NULL UNIQUE,
+            "searchId"      TEXT NOT NULL,
             "searchTerm"    TEXT NOT NULL,
             "title"	        TEXT NOT NULL,
             "price"         INTEGER NOT NULL,
