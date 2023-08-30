@@ -23,7 +23,7 @@ const scraper = async (url) => {
     sumPrices = 0
     adsFound = 0
     validAds = 0
-    nextPage = 0
+    nextPage = true
 
     const parsedUrl = new URL(url)
     const searchTerm = parsedUrl.searchParams.get('q') || ''
@@ -31,18 +31,13 @@ const scraper = async (url) => {
     const notify = await termAlreadySearched(searchId)
 
     do {
-
         url = setUrlParam(url, 'o', page)
 
         try {
-
             const response  = await axios( url )
             const html      = response.data;
             const $         = cheerio.load(html)
-            nextPage        = $('[data-lurker-detail="next_page"]').length
-
-            await scrapePage($, searchTerm, searchId, notify)
-
+            nextPage = await scrapePage($, searchTerm, searchId, notify)
         } catch (error) {
             log.error( 'Could not fetch the url ' + url)
         }
@@ -53,10 +48,14 @@ const scraper = async (url) => {
 }
 
 const scrapePage = async ($, searchTerm, searchId, notify) => {
-
     try {
-        const script = $('script[id="initial-data"]').first().attr('data-json')
-        const adList = JSON.parse(script).listingProps.adList
+        const script = $('script[id="__NEXT_DATA__"]').text()
+        const adList = JSON.parse(script).props.pageProps.ads
+
+        if (!adList.length) {
+            return false
+        }
+
         adsFound += adList.length
 
         log.info( `Checking new ads for: ${searchTerm}` )
@@ -100,6 +99,7 @@ const scrapePage = async ($, searchTerm, searchId, notify) => {
             log.info( 'Minimum price: ' + minPrice)
             log.info( 'Average price: ' + sumPrices / validAds)
         }
+        return true
     } catch( error ) {
         log.error( error );
         throw new Error('Scraping failed');
@@ -109,8 +109,11 @@ const scrapePage = async ($, searchTerm, searchId, notify) => {
 
 const termAlreadySearched = async (id) => {
     try {
-        await adRepository.getAdsBySearchId(id, 1)
-        return true
+        const ad = await adRepository.getAdsBySearchId(id, 1)
+        if (ad.length) {
+            return true
+        }
+        return false
     } catch (error) {
         log.error( error )
         return false
