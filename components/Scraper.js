@@ -2,9 +2,10 @@ const config = require('../config')
 const path = require('path')
 const axios = require('axios')
 const cheerio = require('cheerio')
-const log = require('simple-node-logger').createSimpleLogger( path.join( __dirname, '../', config.logFile ) );
+const log = require('simple-node-logger').createSimpleLogger(path.join(__dirname, '../', config.logFile));
 
-const adRepository = require('../repositories/adRepositorie.js')
+const scraperRepository = require('../repositories/scrapperRepository.js')
+
 const Ad = require('./Ad.js')
 
 let page = 1
@@ -27,27 +28,46 @@ const scraper = async (url) => {
 
     const parsedUrl = new URL(url)
     const searchTerm = parsedUrl.searchParams.get('q') || ''
-    const searchId = hashCode(url);
-    const notify = await termAlreadySearched(searchId)
+    const notify = await urlAlreadySearched(url)
 
     do {
-        url = setUrlParam(url, 'o', page)
-
+        currentUrl = setUrlParam(url, 'o', page)
         try {
-            const response  = await axios( url )
+            const response  = await axios(currentUrl)
             const html      = response.data;
             const $         = cheerio.load(html)
-            nextPage = await scrapePage($, searchTerm, searchId, notify)
+            nextPage        = await scrapePage($, searchTerm, notify, url)
         } catch (error) {
-            log.error( 'Could not fetch the url ' + url)
+            log.error('Could not fetch the url ' + currentUrl)
         }
 
         page++
 
     } while (nextPage);
+
+
+    log.info('Valid ads: ' + validAds)
+
+    if (validAds) {
+        const averagePrice = sumPrices / validAds;
+
+        log.info('Maximum price: ' + maxPrice)
+        log.info('Minimum price: ' + minPrice)
+        log.info('Average price: ' + sumPrices / validAds)
+
+        const scrapperLog = {
+            url,
+            adsFound: validAds,
+            averagePrice,
+            minPrice,
+            maxPrice,
+        }
+
+        await scraperRepository.saveLog(scrapperLog)
+    }
 }
 
-const scrapePage = async ($, searchTerm, searchId, notify) => {
+const scrapePage = async ($, searchTerm, notify) => {
     try {
         const script = $('script[id="__NEXT_DATA__"]').text()
         const adList = JSON.parse(script).props.pageProps.ads
@@ -58,64 +78,56 @@ const scrapePage = async ($, searchTerm, searchId, notify) => {
 
         adsFound += adList.length
 
-        log.info( `Checking new ads for: ${searchTerm}` )
-        log.info( 'Ads found: ' + adsFound )
+        log.info(`Checking new ads for: ${searchTerm}`)
+        log.info('Ads found: ' + adsFound)
 
-        for( let i = 0; i < adList.length; i++ ){
+        for (let i = 0; i < adList.length; i++) {
 
-            log.debug( 'Checking ad: ' + (i+1))
-        
-            const advert    = adList[i]
-            const title     = advert.subject
-            const id        = advert.listId
-            const url       = advert.url
-            const price     = parseInt( advert.price?.replace('R$ ', '')?.replace('.', '') || '0' )
+            log.debug('Checking ad: ' + (i + 1))
+
+            const advert = adList[i]
+            const title = advert.subject
+            const id = advert.listId
+            const url = advert.url
+            const price = parseInt(advert.price?.replace('R$ ', '')?.replace('.', '') || '0')
 
             const result = {
                 id,
                 url,
                 title,
                 searchTerm,
-                searchId,
                 price,
                 notify
             }
-            
-            const ad = new Ad( result )
+
+            const ad = new Ad(result)
             ad.process()
 
-            if(ad.valid){
+            if (ad.valid) {
                 validAds++
                 minPrice = checkMinPrice(ad.price, minPrice)
                 maxPrice = checkMaxPrice(ad.price, maxPrice)
                 sumPrices += ad.price
             }
         }
-        
-        log.info( 'Valid ads: ' + validAds )
 
-        if (validAds) {
-            log.info( 'Maximum price: ' + maxPrice)
-            log.info( 'Minimum price: ' + minPrice)
-            log.info( 'Average price: ' + sumPrices / validAds)
-        }
         return true
-    } catch( error ) {
-        log.error( error );
+    } catch (error) {
+        log.error(error);
         throw new Error('Scraping failed');
     }
 
 }
 
-const termAlreadySearched = async (id) => {
+const urlAlreadySearched = async (url) => {
     try {
-        const ad = await adRepository.getAdsBySearchId(id, 1)
+        const ad = await scraperRepository.getLogsByUrl(url, 1)
         if (ad.length) {
             return true
         }
         return false
     } catch (error) {
-        log.error( error )
+        log.error(error)
         return false
     }
 }
@@ -129,22 +141,14 @@ const setUrlParam = (url, param, value) => {
 }
 
 const checkMinPrice = (price, minPrice) => {
-    if(price < minPrice) return price
+    if (price < minPrice) return price
     else return minPrice
 }
 
 const checkMaxPrice = (price, maxPrice) => {
-    if(price > maxPrice) return price
+    if (price > maxPrice) return price
     else return maxPrice
 }
-
-const hashCode = function(s) {
-    var h = 0, l = s.length, i = 0;
-    if ( l > 0 )
-      while (i < l)
-        h = (h << 5) - h + s.charCodeAt(i++) | 0;
-    return h;
-};
 
 module.exports = {
     scraper
