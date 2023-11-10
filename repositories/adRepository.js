@@ -1,10 +1,8 @@
-const config = require('../config')
-const path = require('path')
 const { db } = require('../database/database.js')
-const log = require('simple-node-logger').createSimpleLogger(path.join(__dirname, '../', config.logFile))
+const $logger = require('../components/Logger.js')
 
 const getAd = async (id) => {
-    log.debug('adRepositorie: getAd')
+    $logger.debug('adRepositorie: getAd')
 
     const query = `SELECT * FROM ads WHERE id = ?`
     const values = [id]
@@ -29,7 +27,7 @@ const getAd = async (id) => {
 
 
 const getAdsBySearchTerm = async (term, limit) => {
-    log.debug('adRepositorie: getAd')
+    $logger.debug('adRepositorie: getAd')
 
     const query = `SELECT * FROM ads WHERE searchTerm = ? LIMIT ?`
     const values = [term, limit]
@@ -54,7 +52,7 @@ const getAdsBySearchTerm = async (term, limit) => {
 
 
 const getAdsBySearchId = async (id, limit) => {
-    log.debug('adRepositorie: getAd')
+    $logger.debug('adRepositorie: getAd')
 
     const query = `SELECT * FROM ads WHERE searchId = ? LIMIT ?`
     const values = [id, limit]
@@ -79,7 +77,7 @@ const getAdsBySearchId = async (id, limit) => {
 
 
 const createAd = async (ad) => {
-    log.debug('adRepositorie: createAd')
+    $logger.debug('adRepositorie: createAd')
 
     const query = `
         INSERT INTO ads( id, url, title, searchTerm, price, created, lastUpdate )
@@ -112,7 +110,7 @@ const createAd = async (ad) => {
 }
 
 const updateAd = async (ad) => {
-    log.debug('adRepositorie: updateAd')
+    $logger.debug('adRepositorie: updateAd')
 
     const query = `UPDATE ads SET price = ?, lastUpdate = ?  WHERE id = ?`
     const values = [ad.price, new Date().toISOString(), ad.id]

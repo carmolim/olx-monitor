@@ -1,8 +1,6 @@
 const config = require('./config')
-const fs = require('fs')
-const path = require('path')
 const cron = require('node-cron')
-const log = require('simple-node-logger').createSimpleLogger(path.join(__dirname, config.logFile))
+const $logger = require('./components/Logger')
 
 const { scraper } = require('./components/Scraper')
 const { createTables } = require('./database/database.js')
@@ -12,13 +10,13 @@ const runScraper = () => {
         try {
             scraper(config.urls[i])
         } catch (error) {
-            log.error(error)
+            $logger.error(error)
         }
     }
 }
 
 const main = async () => {
-    log.info('Program started')
+    $logger.info('Program started')
     await createTables()
     runScraper()
 }
