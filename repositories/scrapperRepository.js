@@ -1,10 +1,8 @@
-const config = require('../config')
-const path = require('path')
 const { db } = require('../database/database.js')
-const log = require('simple-node-logger').createSimpleLogger(path.join(__dirname, '../', config.logFile))
+const $logger = require('../components/Logger.js')
 
 const saveLog = async (data) => {
-    log.debug('scrapperRepository: saveLog')
+    $logger.debug('scrapperRepository: saveLog')
 
     const query = `
         INSERT INTO logs(  url, adsFound, averagePrice, minPrice, maxPrice, created )
@@ -36,7 +34,7 @@ const saveLog = async (data) => {
 }
 
 const getLogsByUrl = async (url, limit) => {
-    log.debug('scrapperRepository: getLogsByUrld')
+    $logger.debug('scrapperRepository: getLogsByUrld')
 
     const query = `SELECT * FROM logs WHERE url = ? LIMIT ?`
     const values = [url, limit]

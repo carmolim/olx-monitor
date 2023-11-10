@@ -26,7 +26,7 @@ const httpClient = async (url) => {
     headers
   }, 'get');
 
-  // Cleanly exit CycleTLS
+// Cleanly exit CycleTLS
 //   cycleTLS.exit();
   return response.body;
 };

@@ -1,9 +1,8 @@
 'use strict';
 
-const path = require('path')
-const config = require('../config')
 const notifier = require('./Notifier')
-const log = require('simple-node-logger').createSimpleLogger(path.join(__dirname, '../', config.logFile))
+const $logger = require('./Logger')
+
 const adRepository = require('../repositories/adRepository.js')
 
 class Ad {
@@ -16,13 +15,13 @@ class Ad {
         this.price      = ad.price
         this.valid      = false
         this.saved      = null,
-    this.notify         = ad.notify
+        this.notify     = ad.notify
     }
 
     process = async () => {
 
         if (!this.isValidAd()) {
-            log.debug('Ad not valid');
+            $logger.debug('Ad not valid');
             return false
         }
 
@@ -39,7 +38,7 @@ class Ad {
             }
 
         } catch (error) {
-            log.error(error);
+            $logger.error(error);
         }
     }
 
@@ -56,31 +55,30 @@ class Ad {
 
         try {
             await adRepository.createAd(this)
-            log.info('Ad ' + this.id + ' added to the database')
-
-            // because in the first run all the ads are new
-            if (this.notify) {
-                try {
-                    const msg = 'New ad found!\n' + this.title + ' - R$' + this.price + '\n\n' + this.url
-                    await notifier.sendNotification(msg)
-                } catch (error) {
-                    log.error('Could not send a notification')
-                }
-            }
+            $logger.info('Ad ' + this.id + ' added to the database')
         }
 
         catch (error) {
-            log.error(error)
+            $logger.error(error)
+        }
+
+        if (this.notify) {
+            try {
+                const msg = 'New ad found!\n' + this.title + ' - R$' + this.price + '\n\n' + this.url
+                notifier.sendNotification(msg, this.id)
+            } catch (error) {
+                $logger.error('Could not send a notification')
+            }
         }
     }
 
     updatePrice = async () => {
-        log.info('updatePrice')
+        $logger.info('updatePrice')
 
         try {
             await adRepository.updateAd(this)
         } catch (error) {
-            log.error(error)
+            $logger.error(error)
         }
     }
 
@@ -93,14 +91,14 @@ class Ad {
             // just send a notification if the price dropped
             if (this.price < this.saved.price) {
 
-                log.info('This ad had a price reduction: ' + this.url)
+                $logger.info('This ad had a price reduction: ' + this.url)
 
                 const decreasePercentage = Math.abs(Math.round(((this.price - this.saved.price) / this.saved.price) * 100))
 
                 const msg = 'Price drop found! ' + decreasePercentage + '% OFF!\n' +
                     'From R$' + this.saved.price + ' to R$' + this.price + '\n\n' + this.url
 
-                await notifier.sendNotification(msg)
+                await notifier.sendNotification(msg, this.id)
             }
         }
     }
