@@ -1,30 +1,10 @@
 'use strict';
 
-const config = require( '../config' )
-const axios = require('axios')
+const config = require('../config');
+const axios = require('axios');
 
-exports.sendNotification = async ( msg ) => {
-
-    msg = encodeURI( msg )
-
-    const MAX_RETRIES = 5;
-
-    for (let i = 0; i <= MAX_RETRIES; i++) {
-        try {
-            return await axios.get('https://api.telegram.org/bot' + config.telegramToken + '/sendMessage?chat_id=' + config.telegramChatID + '&text=' + msg ) 
-        } catch (err) {
-            const timeout = 33 * i
-            console.log('Waiting', timeout, 'ms')
-            await wait(timeout) 
-            console.log('Retrying', err.message, i)
-        }
-    }
-}
-
-function wait (timeout) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-        resolve()
-    }, timeout);
-    })
-}
+exports.sendNotification = async (msg) => {
+    const apiUrl = `https://api.telegram.org/bot${config.telegramToken}/sendMessage?chat_id=${config.telegramChatID}&text=`;
+    const encodedMsg = encodeURIComponent(msg);
+    return await axios.get(apiUrl + encodedMsg, { timeout: 5000 });
+};

@@ -1,6 +1,6 @@
 const config = require('../config')
 const path = require('path')
-const axios = require('axios')
+const $httpClient = require('./HttpClient.js')
 const cheerio = require('cheerio')
 const log = require('simple-node-logger').createSimpleLogger(path.join(__dirname, '../', config.logFile));
 
@@ -14,10 +14,9 @@ let minPrice = 99999999
 let sumPrices = 0
 let validAds = 0
 let adsFound = 0
-let nextPage = 0
+let nextPage = true
 
 const scraper = async (url) => {
-
     page = 1
     maxPrice = 0
     minPrice = 99999999
@@ -33,18 +32,18 @@ const scraper = async (url) => {
     do {
         currentUrl = setUrlParam(url, 'o', page)
         try {
-            const response  = await axios(currentUrl)
+            const response  = await $httpClient(currentUrl)
             const html      = response.data;
             const $         = cheerio.load(html)
             nextPage        = await scrapePage($, searchTerm, notify, url)
         } catch (error) {
-            log.error('Could not fetch the url ' + currentUrl)
+            log.error(error);
+            return
         }
 
         page++
 
     } while (nextPage);
-
 
     log.info('Valid ads: ' + validAds)
 
@@ -116,7 +115,6 @@ const scrapePage = async ($, searchTerm, notify) => {
         log.error(error);
         throw new Error('Scraping failed');
     }
-
 }
 
 const urlAlreadySearched = async (url) => {
