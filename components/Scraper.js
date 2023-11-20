@@ -6,7 +6,7 @@ const log = require('simple-node-logger').createSimpleLogger(path.join(__dirname
 
 const scraperRepository = require('../repositories/scrapperRepository.js')
 
-const Ad = require('./Ad.js')
+const Ad = require('./Ad.js');
 
 let page = 1
 let maxPrice = 0
@@ -31,16 +31,15 @@ const scraper = async (url) => {
 
     do {
         currentUrl = setUrlParam(url, 'o', page)
+        let response
         try {
-            const response  = await $httpClient(currentUrl)
-            const html      = response.data;
-            const $         = cheerio.load(html)
+            response        = await $httpClient(currentUrl)
+            const $         = cheerio.load(response)
             nextPage        = await scrapePage($, searchTerm, notify, url)
         } catch (error) {
             log.error(error);
             return
         }
-
         page++
 
     } while (nextPage);
@@ -121,8 +120,10 @@ const urlAlreadySearched = async (url) => {
     try {
         const ad = await scraperRepository.getLogsByUrl(url, 1)
         if (ad.length) {
+            log.info('Will notify')
             return true
         }
+        log.info('First run, no notifications')
         return false
     } catch (error) {
         log.error(error)
