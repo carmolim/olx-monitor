@@ -66,9 +66,14 @@ const scraper = async (url) => {
 const scrapePage = async ($, searchTerm, notify) => {
     try {
         const script = $('script[id="__NEXT_DATA__"]').text()
+
+        if (!script) {
+            return false
+        }
+
         const adList = JSON.parse(script).props.pageProps.ads
-        
-        if (!adList.length) {
+
+        if (!Array.isArray(adList) || !adList.length ) {
             return false
         }
 
@@ -118,7 +123,6 @@ const urlAlreadySearched = async (url) => {
     try {
         const ad = await scraperRepository.getLogsByUrl(url, 1)
         if (ad.length) {
-            $logger.info('Will notify')
             return true
         }
         $logger.info('First run, no notifications')

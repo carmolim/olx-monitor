@@ -1,0 +1,10 @@
+version: "3.7"
+services:
+
+  olx-monitor:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./src/config.js:/usr/app/config.js
+      - ./src/.env:/usr/app/.env
+      - ./data:/usr/data
