@@ -1,9 +1,6 @@
-const config = require('../config')
-const path = require('path')
-const $httpClient = require('./HttpClient.js')
 const cheerio = require('cheerio')
-const log = require('simple-node-logger').createSimpleLogger(path.join(__dirname, '../', config.logFile));
-
+const $logger = require('./Logger')
+const $httpClient = require('./HttpClient.js')
 const scraperRepository = require('../repositories/scrapperRepository.js')
 
 const Ad = require('./Ad.js');
@@ -28,6 +25,7 @@ const scraper = async (url) => {
     const parsedUrl = new URL(url)
     const searchTerm = parsedUrl.searchParams.get('q') || ''
     const notify = await urlAlreadySearched(url)
+    $logger.info(`Will notify: ${notify}`)
 
     do {
         currentUrl = setUrlParam(url, 'o', page)
@@ -37,21 +35,20 @@ const scraper = async (url) => {
             const $         = cheerio.load(response)
             nextPage        = await scrapePage($, searchTerm, notify, url)
         } catch (error) {
-            log.error(error);
+            $logger.error(error);
             return
         }
         page++
-
     } while (nextPage);
 
-    log.info('Valid ads: ' + validAds)
+    $logger.info('Valid ads: ' + validAds)
 
     if (validAds) {
         const averagePrice = sumPrices / validAds;
 
-        log.info('Maximum price: ' + maxPrice)
-        log.info('Minimum price: ' + minPrice)
-        log.info('Average price: ' + sumPrices / validAds)
+        $logger.info('Maximum price: ' + maxPrice)
+        $logger.info('Minimum price: ' + minPrice)
+        $logger.info('Average price: ' + sumPrices / validAds)
 
         const scrapperLog = {
             url,
@@ -62,6 +59,7 @@ const scraper = async (url) => {
         }
 
         await scraperRepository.saveLog(scrapperLog)
+	    // await browserInstance.close() 
     }
 }
 
@@ -69,19 +67,19 @@ const scrapePage = async ($, searchTerm, notify) => {
     try {
         const script = $('script[id="__NEXT_DATA__"]').text()
         const adList = JSON.parse(script).props.pageProps.ads
-
+        
         if (!adList.length) {
-            return false
+            throw new Error('No adverts found');
         }
 
         adsFound += adList.length
 
-        log.info(`Checking new ads for: ${searchTerm}`)
-        log.info('Ads found: ' + adsFound)
+        $logger.info(`Checking new ads for: ${searchTerm}`)
+        $logger.info('Ads found: ' + adsFound)
 
         for (let i = 0; i < adList.length; i++) {
 
-            log.debug('Checking ad: ' + (i + 1))
+            $logger.debug('Checking ad: ' + (i + 1))
 
             const advert = adList[i]
             const title = advert.subject
@@ -111,7 +109,7 @@ const scrapePage = async ($, searchTerm, notify) => {
 
         return true
     } catch (error) {
-        log.error(error);
+        $logger.error(error);
         throw new Error('Scraping failed');
     }
 }
@@ -120,13 +118,13 @@ const urlAlreadySearched = async (url) => {
     try {
         const ad = await scraperRepository.getLogsByUrl(url, 1)
         if (ad.length) {
-            log.info('Will notify')
+            $logger.info('Will notify')
             return true
         }
-        log.info('First run, no notifications')
+        $logger.info('First run, no notifications')
         return false
     } catch (error) {
-        log.error(error)
+        $logger.error(error)
         return false
     }
 }
@@ -148,6 +146,35 @@ const checkMaxPrice = (price, maxPrice) => {
     if (price > maxPrice) return price
     else return maxPrice
 }
+
+let browserInstance;
+
+const launchBrowser = async () => {
+    if (!browserInstance) {
+      browserInstance = await puppeteer.launch({ headless: true });
+    }
+    return browserInstance;
+  };
+
+const getPageHtml = async (url) => {
+    const browser = await launchBrowser();
+    const page = await browser.newPage();
+    console.log(url);
+  
+    try {
+      await page.goto(url, {waitUntil: "domcontentloaded",});
+      const data = await page.evaluate(() => document.querySelector('*').outerHTML);
+      return data;
+    }
+    catch(error){
+        console.log(error);
+        throw error
+    }finally {
+      // Close the page, but do not close the browser
+      await page.close();
+    }
+  };
+  
 
 module.exports = {
     scraper

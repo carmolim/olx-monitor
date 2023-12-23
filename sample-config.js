@@ -13,7 +13,11 @@ config.urls = [
 config.interval = '*/5 * * * *' 
 config.telegramChatID = process.env.TELEGRAM_CHAT_ID
 config.telegramToken = process.env.TELEGRAM_TOKEN
-config.logFile = 'scrapper.log'
 config.dbFile = 'ads.db'
+
+config.logger={
+    logFilePath: 'scrapper.log',
+    timestampFormat:'YYYY-MM-DD HH:mm:ss'
+}
 
 module.exports = config
