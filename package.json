@@ -6,6 +6,7 @@
   "dependencies": {
     "axios": "^0.21.0",
     "cheerio": "^1.0.0-rc.3",
+    "cycletls": "^1.0.22",
     "dotenv": "^8.2.0",
     "node-cron": "^3.0.2",
     "simple-node-logger": "^18.12.24",
