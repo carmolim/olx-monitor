@@ -35,10 +35,11 @@ const scraper = async (url) => {
             const $         = cheerio.load(response)
             nextPage        = await scrapePage($, searchTerm, notify, url)
         } catch (error) {
-            $logger.error(error);
+            $logger.error(error)
             return
         }
         page++
+
     } while (nextPage);
 
     $logger.info('Valid ads: ' + validAds)
@@ -59,7 +60,6 @@ const scraper = async (url) => {
         }
 
         await scraperRepository.saveLog(scrapperLog)
-	    // await browserInstance.close() 
     }
 }
 
@@ -69,7 +69,7 @@ const scrapePage = async ($, searchTerm, notify) => {
         const adList = JSON.parse(script).props.pageProps.ads
         
         if (!adList.length) {
-            throw new Error('No adverts found');
+            return false
         }
 
         adsFound += adList.length
@@ -146,35 +146,6 @@ const checkMaxPrice = (price, maxPrice) => {
     if (price > maxPrice) return price
     else return maxPrice
 }
-
-let browserInstance;
-
-const launchBrowser = async () => {
-    if (!browserInstance) {
-      browserInstance = await puppeteer.launch({ headless: true });
-    }
-    return browserInstance;
-  };
-
-const getPageHtml = async (url) => {
-    const browser = await launchBrowser();
-    const page = await browser.newPage();
-    console.log(url);
-  
-    try {
-      await page.goto(url, {waitUntil: "domcontentloaded",});
-      const data = await page.evaluate(() => document.querySelector('*').outerHTML);
-      return data;
-    }
-    catch(error){
-        console.log(error);
-        throw error
-    }finally {
-      // Close the page, but do not close the browser
-      await page.close();
-    }
-  };
-  
 
 module.exports = {
     scraper

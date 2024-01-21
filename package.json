@@ -10,7 +10,9 @@
     "dotenv": "^8.2.0",
     "node-cron": "^3.0.2",
     "simple-node-logger": "^18.12.24",
-    "sqlite3": "^5.1.6"
+    "sqlite3": "^5.1.6",
+    "form-data": "^4.0.0"
+
   },
   "scripts": {
     "dev": "nodemon index.js",
