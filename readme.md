@@ -8,7 +8,7 @@ Vi nessa situação uma oportunidade para aprender um pouco sobre scrapping usan
 
 ## Instalação e configuração
 
-Para utilizar esse script você precisa ter o `node` e o `npm` devidamente instalados, ter uma conta no [Telegram](https://telegram.org/), e idealmente um computador que fique ligado 27/7 para executar o script continuamente. Eu usei um Raspberry Pi 2 que consome pouca energia e já uso para outros fins, mas você pode usar um VPS, ou um sevidor gratuito da Oracle.
+Para utilizar esse script você precisa ter o `node` e o `npm` devidamente instalados, ter uma conta no [Telegram](https://telegram.org/), e idealmente um computador que fique ligado 24/7 para executar o script continuamente. Eu usei um Raspberry Pi 2 que consome pouca energia e já uso para outros fins, mas você pode usar um VPS, ou um sevidor gratuito da Oracle.
 
 Se você já está familiarizado com a API do Telegram e já mexeu bom bots segue um passo-a-passo mais enxuto:
 
