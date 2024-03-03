@@ -1,0 +1,13 @@
+./assets
+./_extras
+./src/.env
+./src/config.js
+./src/.env.example
+./src/sample-config.js
+./src/node_modules
+
+*.db
+*.sqlite
+
+.git
+npm-debug.log

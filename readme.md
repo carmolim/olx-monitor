@@ -12,14 +12,26 @@ Para utilizar esse script você precisa ter o `node` e o `npm` devidamente insta
 
 Se você já está familiarizado com a API do Telegram e já mexeu bom bots segue um passo-a-passo mais enxuto:
 
+### Usando Node
+
 1. Clonar ou fazer download do repositório `git clone https://github.com/carmolim/olx-monitor.git`
+1. Acessar a pasta onde os arquivos js se encontram `cd src`
 1. Instalar as dependências com o comando `npm install`
 1. Renomear o arquivo `example.env` para `.env` e incluir as informações do seu BOT e do seu grupo que irá receber as notificações
 1. Incluir as URLs que você quer que sejam monitoradas no arquivo `config.js`
 1. Definir qual o intervalo que você quer que as buscas sejam feitas no arquivo `config.js`
 1. Executar o script usando o comando `node index.js`
 1. Acompanhar o andamento do script no Terminal
-1. Se correu tudo certo, dois novos arquivos foram criados o `ads.db` que é o banco de dados e o `scrapper.log` com os logs de execução do script
+1. Se correu tudo certo, dois novos arquivos foram criados dentro da pasta `data`: `ads.db` que é o banco de dados e o `scrapper.log` com os logs de execução do script
+
+### Usando docker-compose
+
+Se você quiser utiliar o Docker para não ter que instalar o Node e nem as dependências diretamente na sua máquina siga os seguintes passos
+
+1. Realize os passos 1 a 7 do guia usando Node
+2. Na primeira vez que você for rodar é preciso buildar a imagem rodando o comando `docker-compose build`
+3. Nas próximas vezes só é necessário rodar o comando `docker-compose up`
+
 
 ### Configuração do Telegram
 
@@ -74,12 +86,6 @@ config.urls = [
 #### Dica
 
 Quando mais específica sua busca for mais eficiente o script será, se você só buscar por iPhone, no Brasil todo, você vai receber muitas notificações por dia, não vai ser muito legal.
-
-### Executando o script
-
-Agora você já está com tudo configurado, e se você seguiu todos os passos corretamente, basta acessar Terminal na pasta onde você configurou o script e roda o comando `node index.js`
-
-Você poderá acompanhar o funcionamento do script pelo terminal e se tudo funcionar você irá reparar que dois novos arquivos apareceram dentro da sua pasta, o arquivo `ads.db` que é o banco de dados e o `scrapper.log` onde você pode acompanhar o registro do que aconteceu em cada execução do script. 
 
 ## Funcionamento
 
