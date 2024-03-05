@@ -4,3 +4,4 @@ scrapper.log
 config.js
 *.db
 *.sqlite
+node_modules
