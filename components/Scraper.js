@@ -13,7 +13,7 @@ let validAds = 0
 let adsFound = 0
 let nextPage = true
 
-const scraper = async (url) => {
+const scraper = async (url, chatID) => {
     page = 1
     maxPrice = 0
     minPrice = 99999999
@@ -25,7 +25,6 @@ const scraper = async (url) => {
     const parsedUrl = new URL(url)
     const searchTerm = parsedUrl.searchParams.get('q') || ''
     const notify = await urlAlreadySearched(url)
-    $logger.info(`Will notify: ${notify}`)
 
     do {
         currentUrl = setUrlParam(url, 'o', page)
@@ -33,7 +32,7 @@ const scraper = async (url) => {
         try {
             response        = await $httpClient(currentUrl)
             const $         = cheerio.load(response)
-            nextPage        = await scrapePage($, searchTerm, notify, url)
+            nextPage        = await scrapePage($, searchTerm, notify, chatID)
         } catch (error) {
             $logger.error(error)
             return
@@ -63,7 +62,7 @@ const scraper = async (url) => {
     }
 }
 
-const scrapePage = async ($, searchTerm, notify) => {
+const scrapePage = async ($, searchTerm, notify, chatID) => {
     try {
         const script = $('script[id="__NEXT_DATA__"]').text()
         const adList = JSON.parse(script).props.pageProps.ads
@@ -93,7 +92,8 @@ const scrapePage = async ($, searchTerm, notify) => {
                 title,
                 searchTerm,
                 price,
-                notify
+                notify,
+                chatID
             }
 
             const ad = new Ad(result)
@@ -118,7 +118,6 @@ const urlAlreadySearched = async (url) => {
     try {
         const ad = await scraperRepository.getLogsByUrl(url, 1)
         if (ad.length) {
-            $logger.info('Will notify')
             return true
         }
         $logger.info('First run, no notifications')

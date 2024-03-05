@@ -42,7 +42,10 @@ Dentro do repositório tem um arquivo chamado `example.env`, você precisa renom
 | Variável          | Exemplo                                |
 | ----------------- | -------------------------------------- |
 | TELEGRAM_TOKEN    | Token do seu bot gerado pelo BotFather |
-| TELEGRAM_CHAT\_ID | ID do seu chat                         |
+
+Já o CHAT_ID, que é para qual chat o bot enviará os alertas, deve ser configurado no config.js. Você pode separar as URLs por "categorias" e fazer com que o bot envie separadamente os alertas. Muito útil em grupos com tópicos!
+
+Confira o arquivo sample-config.js para mais detalhes e exemplos.
 
 ### O que deve ser monitorado?
 

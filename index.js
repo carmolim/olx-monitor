@@ -6,11 +6,19 @@ const { scraper } = require('./components/Scraper')
 const { createTables } = require('./database/database.js')
 
 const runScraper = () => {
-    for (let i = 0; i < config.urls.length; i++) {
-        try {
-            scraper(config.urls[i])
-        } catch (error) {
-            $logger.error(error)
+
+    for (var chatID in config.urls) {
+        if (config.urls.hasOwnProperty(chatID)) {
+            var urlsArray = config.urls[chatID];
+    
+            // Percorrendo todas as URLs dentro do array
+            for (var i = 0; i < urlsArray.length; i++) {
+                try {
+                    scraper(urlsArray[i], chatID)
+                } catch (error) {
+                    $logger.error(error)
+                }
+            }
         }
     }
 }
