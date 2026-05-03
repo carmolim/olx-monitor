@@ -1,156 +1,179 @@
-const cheerio = require('cheerio')
-const $logger = require('./Logger')
-const $httpClient = require('./HttpClient.js')
-const scraperRepository = require('../repositories/scrapperRepository.js')
+'use strict';
 
+const $logger = require('./Logger');
+const $httpClient = require('./HttpClient.js');
+const scraperRepository = require('../repositories/scrapperRepository.js');
+const PriceAnalyzer = require('./PriceAnalyzer');
 const Ad = require('./Ad.js');
 
-let page = 1
-let maxPrice = 0
-let minPrice = 99999999
-let sumPrices = 0
-let validAds = 0
-let adsFound = 0
-let nextPage = true
-
+/**
+ * Main Scraper function
+ */
 const scraper = async (url) => {
-    page = 1
-    maxPrice = 0
-    minPrice = 99999999
-    sumPrices = 0
-    adsFound = 0
-    validAds = 0
-    nextPage = true
+    const state = {
+        page: 1,
+        validAds: 0,
+        adsFound: 0,
+        nextPage: true,
+        prices: [],
+        searchName: ''
+    };
 
-    const parsedUrl = new URL(url)
-    const searchTerm = parsedUrl.searchParams.get('q') || ''
-    const notify = await urlAlreadySearched(url)
-    $logger.info(`Will notify: ${notify}`)
-
-    do {
-        currentUrl = setUrlParam(url, 'o', page)
-        let response
-        try {
-            response        = await $httpClient(currentUrl)
-            const $         = cheerio.load(response)
-            nextPage        = await scrapePage($, searchTerm, notify, url)
-        } catch (error) {
-            $logger.error(error)
-            return
-        }
-        page++
-
-    } while (nextPage);
-
-    $logger.info('Valid ads: ' + validAds)
-
-    if (validAds) {
-        const averagePrice = sumPrices / validAds;
-
-        $logger.info('Maximum price: ' + maxPrice)
-        $logger.info('Minimum price: ' + minPrice)
-        $logger.info('Average price: ' + sumPrices / validAds)
-
-        const scrapperLog = {
-            url,
-            adsFound: validAds,
-            averagePrice,
-            minPrice,
-            maxPrice,
-        }
-
-        await scraperRepository.saveLog(scrapperLog)
-    }
-}
-
-const scrapePage = async ($, searchTerm, notify) => {
     try {
-        const script = $('script[id="__NEXT_DATA__"]').text()
+        const parsedUrl = new URL(url);
+        state.searchName = parsedUrl.searchParams.get('q') || parsedUrl.pathname || 'search';
+        
+        const notify = await urlAlreadySearched(url);
+        $logger.info(`Scraping "${state.searchName}". Notify: ${notify}`);
 
-        if (!script) {
-            return false
-        }
-
-        const adList = JSON.parse(script).props.pageProps.ads
-
-        if (!Array.isArray(adList) || !adList.length ) {
-            return false
-        }
-
-        adsFound += adList.length
-
-        $logger.info(`Checking new ads for: ${searchTerm}`)
-        $logger.info('Ads found: ' + adsFound)
-
-        for (let i = 0; i < adList.length; i++) {
-
-            $logger.debug('Checking ad: ' + (i + 1))
-
-            const advert = adList[i]
-            const title = advert.subject
-            const id = advert.listId
-            const url = advert.url
-            const price = parseInt(advert.price?.replace('R$ ', '')?.replace('.', '') || '0')
-
-            const result = {
-                id,
-                url,
-                title,
-                searchTerm,
-                price,
-                notify
+        do {
+            const currentUrl = setUrlParam(url, 'o', state.page);
+            const response = await $httpClient(currentUrl);
+            
+            if (!response) {
+                $logger.error(`No response for ${currentUrl}`);
+                break;
             }
 
-            const ad = new Ad(result)
-            ad.process()
-
-            if (ad.valid) {
-                validAds++
-                minPrice = checkMinPrice(ad.price, minPrice)
-                maxPrice = checkMaxPrice(ad.price, maxPrice)
-                sumPrices += ad.price
+            // PERFORMANCE: Extract JSON without loading full Cheerio DOM
+            const adList = extractAdsFromJson(response);
+            
+            if (!adList || adList.length === 0) {
+                state.nextPage = false;
+            } else {
+                state.nextPage = await processAds(adList, notify, url, state);
+                state.page++;
             }
-        }
 
-        return true
+        } while (state.nextPage && state.page <= 10);
+
+        await finalizeScraping(url, state);
+
     } catch (error) {
-        $logger.error(error);
-        throw new Error('Scraping failed');
+        $logger.error(`Scraper failed for ${url}: ${error.message}`);
     }
-}
+};
+
+/**
+ * High performance JSON extraction from HTML
+ */
+const extractAdsFromJson = (html) => {
+    try {
+        const token = '<script id="__NEXT_DATA__" type="application/json">';
+        const start = html.indexOf(token);
+        if (start === -1) return null;
+        
+        const jsonStart = start + token.length;
+        const end = html.indexOf('</script>', jsonStart);
+        if (end === -1) return null;
+        
+        const jsonStr = html.substring(jsonStart, end);
+        const data = JSON.parse(jsonStr);
+        return data.props?.pageProps?.ads || null;
+    } catch (e) {
+        $logger.debug(`JSON extraction failed: ${e.message}`);
+        return null;
+    }
+};
+
+const processAds = async (adList, notify, searchUrl, state) => {
+    state.adsFound += adList.length;
+
+    // Process ads in sequence to be safe with database/notifications
+    for (const advert of adList) {
+        const price = parseInt(advert.price?.replace('R$ ', '')?.replace(/\./g, '') || '0');
+        
+        const ad = new Ad({
+            id: advert.listId,
+            url: advert.url,
+            title: advert.subject,
+            searchTerm: state.searchName,
+            searchUrl,
+            price,
+            notify
+        });
+
+        await ad.process();
+
+        if (ad.valid) {
+            state.validAds++;
+            if (ad.price > 0) state.prices.push(ad.price);
+        }
+    }
+
+    return true;
+};
+
+const finalizeScraping = async (url, state) => {
+    if (state.prices.length === 0) {
+        $logger.info(`No priced ads found for ${state.searchName}`);
+        return;
+    }
+
+    const stats = PriceAnalyzer.calculateStats(state.prices);
+    
+    $logger.info(`--- Statistics for: ${state.searchName} ---`);
+    $logger.info(`Pages: ${state.page - 1} | Ads Found: ${state.validAds}`);
+    $logger.info(`Max Price: R$ ${stats.maxPriceFiltered} | Min Price: R$ ${stats.minPriceFiltered}`);
+    $logger.info(`Average: R$ ${Math.round(stats.average)} | Median: R$ ${stats.median}`);
+    
+    if (stats.mode) $logger.info(`Mode: R$ ${stats.mode}`);
+    if (stats.modalInterval) $logger.info(`Modal Interval: ${stats.modalInterval.label} (${stats.modalInterval.count} ads)`);
+    
+    $logger.info(`Recommended: ${stats.recommended} | Good Price (P45): R$ ${stats.goodPrice}`);
+    $logger.info(`--------------------------------------------`);
+
+    const logData = {
+        url,
+        adsFound: state.validAds,
+        averagePrice: stats.average,
+        minPrice: stats.minPriceFiltered,
+        maxPrice: stats.maxPriceFiltered,
+        medianPrice: stats.median,
+        modePrice: stats.mode,
+        modalIntervalStart: stats.modalInterval?.start ?? null,
+        modalIntervalEnd: stats.modalInterval?.end ?? null,
+        modalIntervalWidth: stats.modalInterval?.width ?? null,
+        modalIntervalCount: stats.modalInterval?.count ?? null,
+        modalTop3BinsJson: stats.modalTop3BinsJson,
+        goodPrice: stats.goodPrice,
+        goodPriceType: stats.goodPriceType,
+        stdDevPrice: stats.stdDev,
+        cvPrice: stats.cv,
+        sampleSize: stats.count,
+    };
+
+    await scraperRepository.saveLog(logData);
+    await logTrend(url, stats.median);
+};
+
+const logTrend = async (url, currentMedian) => {
+    try {
+        const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const prev = await scraperRepository.getLatestLogBefore(url, cutoff);
+        
+        if (prev?.medianPrice && currentMedian) {
+            const deltaPct = ((currentMedian - prev.medianPrice) / prev.medianPrice) * 100;
+            $logger.info(`Trend (7d+): median ${prev.medianPrice} -> ${currentMedian} (${deltaPct.toFixed(1)}%)`);
+        }
+    } catch (e) {
+        $logger.error(`Trend log failed: ${e.message}`);
+    }
+};
 
 const urlAlreadySearched = async (url) => {
     try {
-        const ad = await scraperRepository.getLogsByUrl(url, 1)
-        if (ad.length) {
-            return true
-        }
-        $logger.info('First run, no notifications')
-        return false
-    } catch (error) {
-        $logger.error(error)
-        return false
+        const logs = await scraperRepository.getLogsByUrl(url, 1);
+        return logs.length > 0;
+    } catch (e) {
+        return false;
     }
-}
+};
 
 const setUrlParam = (url, param, value) => {
-    const newUrl = new URL(url)
-    let searchParams = newUrl.searchParams;
-    searchParams.set(param, value);
-    newUrl.search = searchParams.toString();
+    const newUrl = new URL(url);
+    newUrl.searchParams.set(param, value);
     return newUrl.toString();
-}
+};
 
-const checkMinPrice = (price, minPrice) => {
-    if (price < minPrice) return price
-    else return minPrice
-}
-
-const checkMaxPrice = (price, maxPrice) => {
-    if (price > maxPrice) return price
-    else return maxPrice
-}
-
-module.exports = {
-    scraper
-}
+module.exports = { scraper };

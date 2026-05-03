@@ -1,6 +1,26 @@
-/_extras
-.env
+# Dependências
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 scrapper.log
-config.js
+
+# Configurações e Segredos
+.env
+src/.env
+
+# Banco de dados
 *.db
 *.sqlite
+/data/
+
+# Sistema e IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Outros
+/_extras

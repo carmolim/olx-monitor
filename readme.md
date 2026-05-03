@@ -2,98 +2,80 @@
 
 # OLX Monitor
 
-Estava procurando um produto específico no OLX, e diariamente acessava minhas buscas salvas no aplicativo à procura de uma boa oportunidade. Um dia encontrei uma ótima oportunidade, mas quando entrei em contato com o vendedor já era tarde, ele já estava indo ao encontro do comprador e caso a a venda não desse certo tinham mais 3 pessoas na espera para comprar.
+O **OLX Monitor** é um bot inteligente desenvolvido em Node.js para monitorar anúncios no OLX Brasil em tempo real. Ele não apenas avisa sobre novos anúncios, mas também realiza uma análise estatística completa do mercado para ajudar você a identificar as melhores oportunidades.
 
-Vi nessa situação uma oportunidade para aprender um pouco sobre scrapping usando o `nodejs` para tentar não perder uma próxima oportunidade. Espero que você também consiga o mesmo.
+Este projeto é um fork aprimorado que agora suporta **comandos interativos via Telegram**, permitindo gerenciar suas buscas diretamente pelo chat, sem precisar editar arquivos de configuração manualmente.
 
-## Instalação e configuração
+## ✨ Funcionalidades Principais
 
-Para utilizar esse script você precisa ter o `node` e o `npm` devidamente instalados, ter uma conta no [Telegram](https://telegram.org/), e idealmente um computador que fique ligado 27/7 para executar o script continuamente. Eu usei um Raspberry Pi 2 que consome pouca energia e já uso para outros fins, mas você pode usar um VPS, ou um sevidor gratuito da Oracle.
+-   **🤖 Comandos Interativos:** Gerencie suas buscas com `/add`, `/remove` e `/list` diretamente no Telegram.
+-   **🔔 Menções Automáticas:** O bot salva quem adicionou a busca e marca a pessoa (`@username`) quando um novo anúncio é encontrado.
+-   **📊 Inteligência de Mercado:** Calcula automaticamente média, mediana, moda e desvio padrão para cada busca.
+-   **📈 Análise de Tendência:** Identifica se os preços estão subindo ou descendo nos últimos 30 dias (Algoritmo Theil-Sen).
+-   **🟢 Selos de Qualidade:** Classifica anúncios como "Excelente Negócio", "Preço Justo" ou "Caro" baseando-se em dados reais.
+-   **🐳 Pronto para Docker:** Fácil de rodar e manter com `docker-compose`.
 
-Se você já está familiarizado com a API do Telegram e já mexeu bom bots segue um passo-a-passo mais enxuto:
+## 🚀 Como usar (Comandos do Bot)
 
-### Usando Node
+Diferente da versão original, agora você gerencia tudo pelo Telegram:
 
-1. Clonar ou fazer download do repositório `git clone https://github.com/carmolim/olx-monitor.git`
-1. Acessar a pasta onde os arquivos js se encontram `cd src`
-1. Instalar as dependências com o comando `npm install`
-1. Renomear o arquivo `example.env` para `.env` e incluir as informações do seu BOT e do seu grupo que irá receber as notificações
-1. Incluir as URLs que você quer que sejam monitoradas no arquivo `config.js`
-1. Definir qual o intervalo que você quer que as buscas sejam feitas no arquivo `config.js`
-1. Executar o script usando o comando `node index.js`
-1. Acompanhar o andamento do script no Terminal
-1. Se correu tudo certo, dois novos arquivos foram criados dentro da pasta `data`: `ads.db` que é o banco de dados e o `scrapper.log` com os logs de execução do script
+-   `+ /add [LINK_DA_BUSCA] [NOME_OPCIONAL]` - Começa a monitorar uma nova URL do OLX.
+-   `- /remove` - Exibe botões interativos para remover uma busca ativa.
+-   `📋 /list` - Lista todas as buscas que estão sendo monitoradas no chat atual.
 
-### Usando docker-compose
+> **Dica:** Ao usar o `/add`, o bot passará a te marcar em todos os novos anúncios encontrados para aquele link!
 
-Se você quiser utiliar o Docker para não ter que instalar o Node e nem as dependências diretamente na sua máquina siga os seguintes passos
+## 🛠️ Instalação e Configuração
 
-1. Realize os passos 1 a 7 do guia usando Node
-2. Na primeira vez que você for rodar é preciso buildar a imagem rodando o comando `docker-compose build`
-3. Nas próximas vezes só é necessário rodar o comando `docker-compose up`
+### Pré-requisitos
+- Node.js v20 ou superior (ou Docker)
+- Um Bot no Telegram (criado via [@BotFather](https://t.me/botfather))
 
+### 1. Preparando o Ambiente
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/gsuzeda/olx-monitor.git
+   cd olx-monitor
+   ```
+2. Configure as variáveis de ambiente:
+   - Renomeie `src/.env.example` para `src/.env`.
+   - Preencha o `TELEGRAM_TOKEN` com o token do seu bot.
 
-### Configuração do Telegram
+### 2. Executando
 
-Para você poder receber as notificações pelo Telegram você precisa ter algumas coisas, um bot que terá um token e um grupo que tenho bot com que você irá criar como participante.
-
-#### Criar seu bot
-
-Para conseguir o seu token você precisa criar o seu próprio bot. Eu pretendo fazer um tutorial, mas enquanto isso você pode usar esse [aqui](https://www.youtube.com/watch?v=4u9JQR0-Bgc&feature=youtu.be&t=88). O vídeo é longo mas você só precisa assistir até: 3:24. Com esse vídeo você irá conseguir obter o seu token.
-
-#### Descobrindo seu CHAT ID
-
-Depois de criar o seu bot, crie um grupo e convite o seu bot que você acabou de criar e també um outro bot, o `@idbot`, ele vai te ajudar a descobrir o `CHAT_ID` que precisamos para enviar a notificação. 
-
-Depois de incluir o no grupo, basta digitar `/getgroupid@myidbot` e bot irá responder com o ID do chat. 
-
-#### Editando seu ambiênte
-
-Dentro do repositório tem um arquivo chamado `example.env`, você precisa renomea-lo para apenas `.env` e preencher as informações que você acabou de pegar. 
-
-| Variável          | Exemplo                                |
-| ----------------- | -------------------------------------- |
-| TELEGRAM_TOKEN    | Token do seu bot gerado pelo BotFather |
-| TELEGRAM_CHAT\_ID | ID do seu chat                         |
-
-### O que deve ser monitorado?
-
-Eu não sei o que você está procurando no OLX, mas você precisa dizer para o script. A forma mais fácil de fazer isso é entrar no site do OLX, fazer uma busca, colocar os filtros que você acha necessário e copiar o endereço que o OLX vai criar.
-
-Recomendo utilizar filtros bem específicos para não gerar resultados com muitos itens. Como esse script irá varrer todos os resultados encontrados, pode ser possível que não seja possível passar por todos os resultados dentro do intervalo definido, isso pode fazer com que o Olx perceba uma quantidade alta de chamadas do seu IP e faça algum bloqueio. Isso nunca me aconteceu, mas pode acontecer.
-
-Você pode utilizar uma ou mais pesquisas, basta apenas incluir as `URLs` no arquivo `config.js` dentro da variável `URLs`
-
-#### Exemplos
-
-##### Apenas uma `URL`
-
-```
-config.urls = ['https://sp.olx.com.br/sao-paulo-e-regiao/centro/celulares/iphone?cond=1&cond=2&pe=1600&ps=600&q=iphone']
+#### Via Docker (Recomendado)
+```bash
+docker-compose up -d
 ```
 
-##### Várias `URLs`
+#### Via Node.js
+```bash
+# Instale as dependências
+npm install
+cd src && npm install
 
-Para usar várias `URLs` você só precisa separa-las por vírgula.
-
+# Inicie o monitor
+npm start
 ```
-config.urls = [
-    'https://sp.olx.com.br/sao-paulo-e-regiao/centro/celulares/iphone?cond=1&cond=2&pe=1600&ps=600&q=iphone',
-    'https://sp.olx.com.br/sao-paulo-e-regiao/imoveis/venda?bae=2&bas=1&gsp=1&pe=600000&ps=100000&se=6&ss=2',
-]
-```
 
-#### Dica
+## ⚙️ Configuração Adicional (`src/config.js`)
 
-Quando mais específica sua busca for mais eficiente o script será, se você só buscar por iPhone, no Brasil todo, você vai receber muitas notificações por dia, não vai ser muito legal.
+Você ainda pode ajustar o comportamento global no arquivo `src/config.js`:
+- `interval`: Tempo de espera entre cada ciclo de varredura (em minutos).
+- `dbFile`: Caminho do arquivo de banco de dados SQLite.
 
-## Funcionamento
+## 🧠 Como o Monitor Trabalha
 
-O funcionamamento do script é simples. Ele percorre um `array` de `URLs` copiadas do OLX, que já contém os filtros de preço mínimo, máximo e etc, encontra os anúncios dentro dessa página e inclui os anúncios encontrados em um banco de dados SQLite e também envia uma notificação para um BOT no Telegram. 
+O bot utiliza técnicas avançadas de Web Scraping e Estatística:
+1. **Varredura:** Acessa as páginas do OLX buscando novos anúncios.
+2. **Análise:** Filtra anúncios sem preço ou duplicados e gera métricas.
+3. **Veredito:** Compara o preço do novo anúncio com a mediana do mercado. Se estiver significativamente abaixo, ele te avisa com um destaque especial!
 
-As entradas salvas no banco de dados são utilizadas posteriormente para detectar alterações nos preços, que também são notificadas através do Telegram.
+---
 
+## 📄 Licença e Autor
 
-## Considerações
+Originalmente criado por [Augusto Carmo](https://github.com/carmolim).
+Mantido e aprimorado por **GabrielUzeda**.
 
-- Esse script só funciona com a versão brasileira do OLX, nos outros países a interface é diferente e o scrapper não consegue puxar as informações necessárias para funcionar. Porém a adaptação para outros países deve ser consideravalmente fácil de fazer. As alterações deverão ser feitas no arquivo `Scraper.js`
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.

@@ -1,13 +1,12 @@
 # Builder Stage
-FROM node:16 AS builder
+FROM node:20 AS builder
 WORKDIR /usr/app
 COPY ./src ./
-RUN npm ci --only=production
+RUN npm install --omit=dev --no-audit --no-fund
 
 # Final Stage
-FROM node:16-alpine
-ARG NODE_ENV
+FROM node:20
 WORKDIR /usr/app
 COPY --from=builder /usr/app/ ./
 EXPOSE 3000
-CMD [ "npm", "start" ]
+CMD [ "npm", "run", "start" ]
