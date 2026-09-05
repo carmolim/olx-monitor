@@ -12,6 +12,10 @@ let sumPrices = 0
 let validAds = 0
 let adsFound = 0
 let nextPage = true
+let seenIds = new Set()
+
+// OLX serves at most 100 pages: past that it replays the last one
+const MAX_PAGES = 100
 
 const scraper = async (url) => {
     page = 1
@@ -21,6 +25,7 @@ const scraper = async (url) => {
     adsFound = 0
     validAds = 0
     nextPage = true
+    seenIds = new Set()
 
     const parsedUrl = new URL(url)
     const searchTerm = parsedUrl.searchParams.get('q') || ''
@@ -28,7 +33,7 @@ const scraper = async (url) => {
     $logger.info(`Will notify: ${notify}`)
 
     do {
-        currentUrl = setUrlParam(url, 'o', page)
+        const currentUrl = setUrlParam(url, 'o', page)
         let response
         try {
             response        = await $httpClient(currentUrl)
@@ -40,7 +45,11 @@ const scraper = async (url) => {
         }
         page++
 
-    } while (nextPage);
+    } while (nextPage && page <= MAX_PAGES);
+
+    if (page > MAX_PAGES) {
+        $logger.info('Reached the last page OLX will serve (' + MAX_PAGES + ')')
+    }
 
     $logger.info('Valid ads: ' + validAds)
 
@@ -74,6 +83,13 @@ const scrapePage = async ($, searchTerm, notify) => {
             const flightScript = $('script:not([src])').toArray()
                 .map(element => $(element).text())
                 .find(script => script.includes('listId'))
+
+            // past the last page OLX serves a valid page with no ad payload
+            if (!flightScript) {
+                $logger.info('No ads on this page, stopping pagination')
+                return false
+            }
+
             const payload = JSON.parse(flightScript.match(/^self\.__next_f\.push\((.*)\)\s*$/s)[1])[1]
             adList = JSON.parse(payload.match(/"ads":(\[.*\]),"searchBoxProps":/s)[1])
         }
@@ -81,6 +97,16 @@ const scrapePage = async ($, searchTerm, notify) => {
         if (!Array.isArray(adList) || !adList.length ) {
             return false
         }
+
+        // a page without a single new ad means the results are exhausted
+        adList = adList.filter(advert => !seenIds.has(advert.listId))
+
+        if (!adList.length) {
+            $logger.info('No new ads on this page, stopping pagination')
+            return false
+        }
+
+        adList.forEach(advert => seenIds.add(advert.listId))
 
         adsFound += adList.length
 
